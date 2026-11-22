@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+  xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:trackback="http://madskills.com/public/xml/rss/module/trackback/"
+  xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>Stripe Blog</title>
+    <link>https://stripe.com/blog</link>
+    <description>The Stripe Blog</description>
+    <item>
+      <title>Give your agents controlled access to analyze your data and move funds</title>
+      <link>https://stripe.com/blog/give-your-agents-controlled-access-to-analyze-your-data-and-move-funds</link>
+      <description>Stripe Treasury now lets agents transfer funds, convert currencies, and pay vendors within limits you set. Give agents the access they need to help run your business, with customizable controls and human approvals.</description>
+      <enclosure url="https://images.ctfassets.net/fzn2n1nzq965/10A3T8HQCDd7rLV6grrGb1/b0d613db23d292c18597f389b7ec44cd/index-image.png"
+        length="767365"
+        type="image/png"/>
+      <pubDate>Thu, 19 Nov 2026 00:00:00 +0000</pubDate>
+      <guid isPermaLink="true">https://stripe.com/blog/give-your-agents-controlled-access-to-analyze-your-data-and-move-funds</guid>
+      <dc:date>2026-11-19T00:00:00+00:00</dc:date>
+    </item>
+    <item>
+      <title>Analyze your Stripe data directly with your agent </title>
+      <link>https://stripe.com/blog/analyze-your-stripe-data-directly-with-your-agent</link>
+      <description>You can now use natural language to create an investor slide deck highlighting where your business outperformed in the previous quarter, or build a custom dashboard to understand why your Stripe revenue changed.</description>
+      <enclosure url="https://images.ctfassets.net/fzn2n1nzq965/1kTCeRYmJdq4abWCeuLLlx/69b9bad3105952e65ae48d48286db95b/index-crop.jpg"
+        length="644590"
+        type="image/jpeg"/>
+      <pubDate>Thu, 05 Nov 2026 00:00:00 +0000</pubDate>
+      <guid isPermaLink="true">https://stripe.com/blog/analyze-your-stripe-data-directly-with-your-agent</guid>
+      <dc:date>2026-11-05T00:00:00+00:00</dc:date>
+    </item>
+    <item>
+      <title>Stripe on Stripe: What we learned moving $1B in vendor payments to Global Payouts</title>
+      <link>https://stripe.com/blog/stripe-on-stripe-what-we-learned-moving-1b-in-vendor-payments-to-global-payouts</link>
+      <description>In early 2026, we began moving our vendor payments to Global Payouts, Stripe’s product for paying recipients in 160+ countries. New-market setup fell from six weeks to one, with a 99.9% payout success rate. Here’s what we learned.</description>
+      <enclosure url="https://images.ctfassets.net/fzn2n1nzq965/1x8frf1UltiAXw1qMcAwix/13d61cb5340a488872e3d5603542a973/Index_image__appears_on_the_blog_index_page_._Specs__1250x1250px_with_padding.jpg"
+        length="432628"
+        type="image/jpeg"/>
+      <pubDate>Fri, 30 Oct 2026 00:00:00 +0000</pubDate>
+      <guid isPermaLink="true">https://stripe.com/blog/stripe-on-stripe-what-we-learned-moving-1b-in-vendor-payments-to-global-payouts</guid>
+      <dc:date>2026-10-30T00:00:00+00:00</dc:date>
+    </item>
+    <item>
+      <title>How the fastest-growing enterprises on Stripe scale globally</title>
+      <link>https://stripe.com/blog/how-the-fastest-growing-enterprises-on-stripe-scale-globally</link>
+      <description>Despite slower global economic growth and greater geopolitical fragmentation, the fastest-growing enterprises continue to look beyond their home markets and are investing in tools and workflows that make expansion faster and more repeatable.</description>
+      <enclosure url="https://images.ctfassets.net/fzn2n1nzq965/21c4x9WtPapHdlzus7DrLH/44290482640b8f21eafc45f3857210b1/1250x1250.png"
+        length="982109"
+        type="image/png"/>
+      <pubDate>Tue, 27 Oct 2026 00:00:00 +0000</pubDate>
+      <guid isPermaLink="true">https://stripe.com/blog/how-the-fastest-growing-enterprises-on-stripe-scale-globally</guid>
+      <dc:date>2026-10-27T00:00:00+00:00</dc:date>
+    </item>
+    <item>
+      <title>Trends from Money20/20 2026: The rise of “hidden” financial services </title>
+      <link>https://stripe.com/blog/trends-from-money20-20-2026-the-rise-of-hidden-financial-services</link>
+      <description>As fintech products become increasingly capable, the infrastructure behind them fades into the background. Three trends from Money20/20 show how stablecoins, agents, and always-on money are changing financial services. </description>
+      <enclosure url="https://images.ctfassets.net/fzn2n1nzq965/E9ooMiF7naLlOUr4gwWaz/c585d798f67d5126c04aa475213241af/Index_image-1.png"
+        length="486039"
+        type="image/png"/>
+      <pubDate>Thu, 22 Oct 2026 00:00:00 +0000</pubDate>
+      <guid isPermaLink="true">https://stripe.com/blog/trends-from-money20-20-2026-the-rise-of-hidden-financial-services</guid>
+      <dc:date>2026-10-22T00:00:00+00:00</dc:date>
+    </item>
+    <item>
+      <title>Stripe survey: Four trends reshaping how SaaS platforms compete in the AI era</title>
+      <link>https://stripe.com/blog/saas-platform-trends-in-AI-era</link>
+      <description>AI is creating more SaaS competition, and platforms are feeling the pressure. A Stripe survey of 200 platform leaders shows how they plan to evolve pricing, grow revenue, and retain customers.</description>
+      <enclosure url="https://images.ctfassets.net/fzn2n1nzq965/3PIdC4MKe2BXnn4EY4vVNk/d461ea6886dd076a35f1313419f19f4d/4_ways_SaaS_platforms_are_evolving_in_the_age_of_AI_-_INDEX.png"
+        length="392431"
+        type="image/png"/>
+      <pubDate>Mon, 19 Oct 2026 00:00:00 +0000</pubDate>
+      <guid isPermaLink="true">https://stripe.com/blog/saas-platform-trends-in-AI-era</guid>
+      <dc:date>2026-10-19T00:00:00+00:00</dc:date>
+    </item>
+    <item>
+      <title>New ways for fintechs to move money and expand globally</title>
+      <link>https://stripe.com/blog/new-ways-for-fintechs-to-move-money-and-expand-globally</link>
+      <description>We’re introducing three updates to help fintechs launch products and grow internationally more easily: simpler payout management with Stripe Global Payouts, support for stablecoin cards in more countries, and unified APIs for building global financial products. </description>
+      <enclosure url="https://images.ctfassets.net/fzn2n1nzq965/eKftRVNsIvc86x4rTK06w/9f89d806876c97cb253098c787818baf/Index_image__appears_on_the_blog_index_page_._Specs__1250x1250px_with_padding__2_.png"
+        length="432758"
+        type="image/png"/>
+      <pubDate>Fri, 16 Oct 2026 00:00:00 +0000</pubDate>
+      <guid isPermaLink="true">https://stripe.com/blog/new-ways-for-fintechs-to-move-money-and-expand-globally</guid>
+      <dc:date>2026-10-16T00:00:00+00:00</dc:date>
+    </item>
+    <item>
+      <title>Sync real-time Stripe data to Postgres with Stripe Data Pipeline</title>
+      <link>https://stripe.com/blog/real-time-stripe-data-postgres</link>
+      <description>Applications rely on current Stripe data to fulfill orders, update customer accounts, and manage access to paid features. Until now, developers have had to build and maintain custom integrations to keep application databases in sync with Stripe. We’re introducing real-time sync to Postgres for Stripe Data Pipeline, which lets them keep databases current without having to build custom integrations.</description>
+      <enclosure url="https://images.ctfassets.net/fzn2n1nzq965/7BvPW4nQ9gdzqnXQNUaKbw/4d4152e6698fbe360fb753ff31ace6c2/Index_image__appears_on_the_blog_index_page_._Specs__1250x1250px_with_padding.png"
+        length="150309"
+        type="image/png"/>
+      <pubDate>Thu, 15 Oct 2026 00:00:00 +0000</pubDate>
+      <guid isPermaLink="true">https://stripe.com/blog/real-time-stripe-data-postgres</guid>
+      <dc:date>2026-10-15T00:00:00+00:00</dc:date>
+    </item>
+    <item>
+      <title>The “alien” economics of AI monetization</title>
+      <link>https://stripe.com/blog/economics-of-ai-monetization</link>
+      <description>As usage, costs, and customer expectations change, AI companies are moving beyond traditional SaaS pricing. Leaders at Monetize 2026 shared how they’re combining subscriptions with usage-based billing, building spend controls into products, adapting packaging and value metrics, and making pricing readable for both human and AI buyers.</description>
+      <enclosure url="https://images.ctfassets.net/fzn2n1nzq965/6kxvuJDHvg9cCTNLuACl0o/64b5443480f21fa7ea93c3aded30b8ee/Index_image__-_Kyle.png"
+        length="2569680"
+        type="image/png"/>
+      <pubDate>Tue, 13 Oct 2026 00:00:00 +0000</pubDate>
+      <guid isPermaLink="true">https://stripe.com/blog/economics-of-ai-monetization</guid>
+      <dc:date>2026-10-13T00:00:00+00:00</dc:date>
+    </item>
+    <item>
+      <title>Why I tried to kill token billing (and why we kept it)</title>
+      <link>https://stripe.com/blog/where-pricing-is-headed</link>
+      <description>Token billing is useful infrastructure, but usually a bad customer-facing pricing model. Your invoice should define the value your product delivers, not break down what it cost you to create it.</description>
+      <enclosure url="https://images.ctfassets.net/fzn2n1nzq965/429O97zRn17cvoY9EQIuoO/17adb35450f60d6ddd613c04cca873f4/1250x1250.jpg"
+        length="1025043"
+        type="image/jpeg"/>
+      <pubDate>Thu, 01 Oct 2026 00:00:00 +0000</pubDate>
+      <guid isPermaLink="true">https://stripe.com/blog/where-pricing-is-headed</guid>
+      <dc:date>2026-10-01T00:00:00+00:00</dc:date>
+    </item>
+  </channel>
+</rss>
