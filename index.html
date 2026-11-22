@@ -49,6 +49,7 @@ canvas{width:100%;height:260px;display:block}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
 a{color:#1a56a0}
 footer{max-width:980px;margin:0 auto;padding:8px 16px 40px;color:var(--sub);font-size:13px}
+.kv .how{display:block;font-size:11.5px;color:var(--sub);line-height:1.5}
 </style>
 <style>
 /* 見た目（未来・SF の色合い） */
@@ -207,6 +208,7 @@ details p{margin:4px 0 2px}
 <button data-go="more"><svg viewBox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg><span>その他</span></button>
 </nav>
 <footer>XRP のシンボルは、コミュニティが作った XRP の印を使っています。この道具はリップル社や XRP の公式のものではありません。注文や送金の機能はありません。API の鍵や個人情報は使いません。記録はこの端末のブラウザの中だけに保存します。</footer>
+<script src="analysis.js"></script>
 <script>
 'use strict';
 /* ---------- 保存 ---------- */
@@ -264,6 +266,7 @@ function loadCfg(){const c=get('cfg',null);const d=JSON.parse(JSON.stringify(DEF
  for(const i of d.inds){const s=c.inds.find(x=>x.k===i.k);if(s){for(const f of['w','zero','full'])if(isFinite(s[f]))i[f]=Number(s[f]);}}
  for(const f of['strong','ok','minF','sigTh','budget','mStrong','mOk','mSkip'])if(isFinite(c[f]))d[f]=Number(c[f]);
  for(const f of['linkW','liq','via','turn'])if(isFinite(c[f]))d[f]=Number(c[f]);
+ if(Array.isArray(c.thesis)&&c.thesis.length){d.thesis=c.thesis.slice(0,12).map(t=>({n:String(t&&t.n||'').slice(0,40),si:Math.max(0,Math.min(4,Math.round(+(t&&t.si)||0))),f:String(t&&t.f||'').slice(0,800),w:String(t&&t.w||'').slice(0,200),th:Array.isArray(t&&t.th)?t.th.slice(0,6).map(x=>String(x).replace(/\W/g,'')):[]}));d.thesisAt=String(c.thesisAt||'').slice(0,10)}
  if(c.mk&&typeof c.mk==='object'){d.mk={};for(const k in c.mk){const u=c.mk[k]||{},o={};for(const f of['g','sh','x'])if(isFinite(u[f]))o[f]=Number(u[f]);d.mk[String(k).replace(/\W/g,'')]=o}}
  if(c.led&&typeof c.led==='object'){d.led={};for(const k in c.led){const u=c.led[k]||{},o={};for(const f of['s','f','l'])if(isFinite(u[f]))o[f]=Math.max(0,Math.min(5,Math.round(u[f])));d.led[String(k).replace(/\W/g,'')]=o}}
  if(c.view&&typeof c.view==='object'){d.view={};for(const k in c.view)if(isFinite(c.view[k]))d.view[String(k).replace(/\W/g,'')]=Number(c.view[k])}
@@ -571,6 +574,30 @@ function thesisHtml(){
  ${THESIS.map((t,i)=>`<div class="tc" style="margin-top:8px"><div class="tch"><b><span class="go" style="margin-right:6px">${i+1}</span>${t.n}</b><span class="chip ${t.c}">${t.s}</span></div>
  <details><summary>根拠と、次に見る数字</summary><p>${t.f}</p><p><b>次に見る数字</b>：${t.w}</p></details></div>`).join('')}
  <p class="sub" style="margin-top:8px">段1〜4は「市場が大きくなるか」、段5は「その中で XRPL が取れるか」です。段4までは裏付けが出てきていますが、段5は、今の公式の資料では確かめられていません。調べた日：2026-11-23。数字の多くは報道からです。</p>`}
+/* 5段の表は固定にしない：①自分で直した内容（端末に保存）②調べ直した内容（analysis.js の window.KB）③はじめの内容 の順で使う */
+const STS=[['go','確かめられた'],['go','数字が出ている'],['okc','始まったばかり'],['okc','計画・発言の段階'],['no','裏付けが見つからない']];
+const TH0=[2,4,1,0,4],THT=[['ai'],['pay','bank'],['rlusd','rwa'],['multi'],['xrp','multi']];
+function getThesis(){
+ const KB=window.KB||{};
+ if(Array.isArray(cfg.thesis)&&cfg.thesis.length)return {list:cfg.thesis,by:'自分で直した内容（'+(cfg.thesisAt||'')+'）',date:cfg.thesisAt||'2026-11-23',mine:true};
+ if(Array.isArray(KB.thesis)&&KB.thesis.length)return {list:KB.thesis.map(t=>({n:String(t.n||''),si:Math.max(0,Math.min(4,+t.si||0)),f:String(t.f||''),w:String(t.w||''),th:Array.isArray(t.th)?t.th.map(String):[]})),by:'調べ直した内容（'+String(KB.updated||'')+'）',date:String(KB.updated||'2026-11-23')};
+ return {list:THESIS.map((t,i)=>({n:t.n,si:TH0[i],f:t.f,w:t.w,th:THT[i]})),by:'はじめの内容（2026-11-23 調べ）',date:'2026-11-23'}}
+function thesisHtml2(){
+ const T=getThesis(),news=(state.newsAll||[]);
+ return `<h3>考え方の段と、今の裏付け</h3>
+ <div class="sub">「AI×金融×経済を結ぶにはブロックチェーンが要り、それをまとめるのが XRPL」という考え方を段に分けて、裏付けを確かめた結果です。</div>
+ <div class="sub">今の内容：${esc(T.by)}</div>
+ ${T.list.map((t,i)=>{const st=STS[t.si]||STS[4],nn=news.filter(x=>x.d&&x.d>T.date&&(t.th||[]).includes(x.th)).length;
+ return `<div class="tc" style="margin-top:8px"><div class="tch"><b><span class="go" style="margin-right:6px">${i+1}</span>${esc(t.n)}</b><span class="chip ${st[0]}">${st[1]}</span>${nn?`<span class="chip go">新しい発表 ${nn}本</span>`:''}</div>
+ <details><summary>根拠・次に見る数字・直す</summary><p>${esc(t.f)}</p>${t.w?`<p><b>次に見る数字</b>：${esc(t.w)}</p>`:''}
+ ${nn?`<p class="go">調べた日より後に、この段に関わる発表が ${nn}本 出ています。「動向」のタブで中身を見て、下の裏付けを見直してください。</p>`:''}
+ <p class="sub">この段を直す</p>
+ <input type="text" data-th="${i}" data-f="n" value="${esc(t.n)}" maxlength="40" style="max-width:100%;width:100%">
+ <div class="row"><select data-th="${i}" data-f="si">${STS.map((s,k)=>`<option value="${k}" ${k===t.si?'selected':''}>${s[1]}</option>`).join('')}</select><button data-thdel="${i}" type="button">この段を消す</button></div>
+ <textarea data-th="${i}" data-f="f" maxlength="800" style="min-height:90px">${esc(t.f)}</textarea></details></div>`}).join('')}
+ <div class="row"><button id="thAdd" type="button">段を足す</button>${T.mine?'<button id="thReset" type="button">調べた内容に戻す</button>':''}</div>
+ <p class="sub">段の数・題名・裏付けは、後から変えられます。直した内容はこの端末に保存され、「記録の書き出し」に入ります。私（Claude）が調べ直した時は、調べ直した内容に入れ替えられます。</p>`}
+function thesisEdit(fn){const cur=getThesis().list.map(t=>({n:t.n,si:t.si,f:t.f,w:t.w||'',th:(t.th||[]).slice()}));fn(cur);cfg.thesis=cur;cfg.thesisAt=today();set('cfg',cfg);renderAll()}
 function analyze2(S){
  const B=analyze(S),o=cfg.led||{};
  const led=LEDGER.map(t=>{const u=o[t.k]||{},s=isFinite(u.s)?+u.s:t.s,f=Math.max(s,isFinite(u.f)?+u.f:t.f),l=isFinite(u.l)?+u.l:t.l,old=B.th.find(x=>x.k===t.k)||{};
@@ -603,7 +630,7 @@ function renderBiz2(){
  <div class="kv"><div><span>今の設定</span><b id="lwPct">${B.linkW}%</b></div>
  <div><span>事業の分析の点</span><b id="lwBiz" class="go">${num(B.score,0)}</b></div>
  <div><span>総合点（指を離すと反映）</span><b id="lwTot">${state.total==null?'—':num(state.total,0)}</b></div></div></div>
- ${thesisHtml()}
+ ${thesisHtml2()}
  ${mkHtml(B.mkt)}
  <h3>許可・契約の進み具合</h3>
  <div class="tcs">${B.led.map(t=>`<div class="tc"><div class="tch"><b>${t.n}</b><span class="chip ${t.l>=3?'go':t.l===2?'okc':'no'}">${LKS[t.l]}</span></div>
@@ -616,7 +643,7 @@ function renderBiz2(){
  <p><b>XRP への結びつき</b>：${LKN[t.l]}。${t.lt}</p>
  <p><b>次に見る所</b>：${t.nx}</p>
  <p class="sub">自分の見方に直す　今 ${sel(t.k,'s',t.s,STN,1)}　2〜3年後 ${sel(t.k,'f',t.f,STN,1)}　結びつき ${sel(t.k,'l',t.l,LKS,0)}${t.edited?'　<b class="no">（自分で直した値）</b>':''}</p></details></div>`).join('')}</div>
- <div class="legend" style="margin-top:8px"><span><i style="background:linear-gradient(90deg,var(--acc),var(--go))"></i>今の段階</span><span><i style="background:rgba(39,217,163,.35)"></i>2〜3年後の見込み</span><span>段階：1 構想 → 2 提携・申請 → 3 許可・契約 → 4 稼働 → 5 数字の公表</span></div>
+ <div class="legend" style="margin-top:8px"><span><i style="background:linear-gradient(90deg,var(--acc),var(--go))"></i>今の段階</span><span><i style="background:rgba(39,217,163,.35)"></i>2〜3年後の見込み</span><span style="white-space:normal;flex-basis:100%">段階：1 構想 → 2 提携・申請 → 3 許可・契約 → 4 稼働 → 5 数字の公表</span></div>
  <h3>11/22 より後に出た新しい発表</h3>
  ${B.fresh.length?`<ul>${B.fresh.map(x=>`<li><a href="https://ripple.com/ripple-press/${esc(x.s)}/" target="_blank" rel="noopener">${esc(x.s.replace(/-/g,' '))}</a>（${esc(x.d)}・${esc(x.tn)}・段階の目安：${STN[x.st]}）${x.up?' <b class="go">段階が上がる可能性</b>':''}</li>`).join('')}</ul>`:'<p class="sub">まだありません。新しい発表が出ると、ここにテーマと段階の目安つきで出ます。</p>'}
  <p class="note">発表の本数は点に使っていません。テーマごとに、発表の中身がどの段階まで進んだかで点を付けます（1段階＝20点）。段階と結びつきは、2026-11-22 にリップル社の公式発表22本の本文を読んで付けました。数字はリップル社の発表で、第三者の確認はありません。新しい発表の段階の目安は題名の言葉から機械的に出すので、段階を上げるかどうかは「自分の見方に直す」で決めてください。</p>`;
@@ -750,7 +777,7 @@ function renderAll(){
  ${GO.map(g=>`<tr><td colspan="6"><b>${GN[g]}：${gs[g]==null?'—':num(gs[g],0)+' 点'}</b></td></tr>`+cfg.inds.filter(d=>d.g===g).map(line).join('')).join('')}
  <tr><td><b>総合点</b></td><td></td><td></td><td></td><td>${sw}</td><td><b>${s==null?'—':num(s,1)}</b></td></tr></table></div>
  <p class="note">点数は「0点の値」から「100点の値」までをまっすぐ結んで出します。取れていない指標は外し、残りの重みで計算します。</p>`;
- renderBiz2();renderNews();renderFm();renderHold();renderRoad();renderTest();renderConf();renderRef();renderFile();renderSrc();setTimeout(balanceFallback,0);
+ renderNews();renderBiz2();renderFm();renderHold();renderRoad();renderTest();renderConf();renderRef();renderFile();renderSrc();setTimeout(balanceFallback,0);
 }
 function renderBiz(){
  const B=state.biz;if(!B||!$('biz'))return;const am=state.am||[];
@@ -798,9 +825,9 @@ function newsCard(n){
  const led=state.biz&&state.biz.led?state.biz.led.find(t=>t.k===n.th):null,up=led&&n.st>led.s;
  const ja=n.ja||JA[n.s]||'',en=esc(n.s.replace(/-/g,' ').replace(/^./,c=>c.toUpperCase()));
  const title=ja?esc(ja):`【${TN[n.th]||'その他'}】${R_HEAD[n.st||0]}<br><span class="sub" style="font-weight:400">日本語の題名はまだありません。原題：${en}</span>`;
- return `<div class="nc"><div class="chips"><span class="sub">${esc(n.d||'日付なし')}</span>${n.ai?`<span class="chip okc">${TN[n.th]||'その他'}</span>${n.st?`<span class="chip ${n.st>=4?'go':n.st===3?'okc':'no'}">段階${n.st}：${STN[n.st]}</span>`:''}<span class="chip ${n.xm?'go':'no'}">${n.xm?'本文に XRP あり':'XRP の記載なし'}</span>${up?'<span class="chip go">段階が進んだ可能性</span>':''}`:'<span class="chip no">解説はまだ</span>'}</div>
+ return `<div class="nc"><div class="chips"><span class="sub">${esc(n.d||'日付なし')}</span>${n.ai?`<span class="chip okc">${TN[n.th]||'その他'}</span>${n.st?`<span class="chip ${n.st>=4?'go':n.st===3?'okc':'no'}">段階${n.st}：${STN[n.st]}</span>`:''}<span class="chip ${(XS[n.xs]||XS.i)[1]}">XRP への効き：${(XS[n.xs]||XS.i)[0]}</span>${up?'<span class="chip go">段階が進んだ可能性</span>':''}`:'<span class="chip no">解説はまだ</span>'}</div>
  <h4>${title}</h4>
- ${n.ai?`<dl><dt>何が起きた</dt><dd>${esc(n.what)}</dd><dt>今後の影響</dt><dd>${esc(n.impact)}</dd><dt>XRP への効き方</dt><dd>${esc(n.xrp)}</dd></dl>`:''}
+ ${n.ai?`<dl><dt>何が起きた</dt><dd>${esc(n.what)}</dd><dt>今後の影響</dt><dd>${esc(n.impact)}</dd><dt>XRP への効き方</dt><dd>${esc(n.xrp)}</dd>${n.watch?`<dt>次に見る所</dt><dd>${esc(n.watch)}</dd>`:''}</dl>${n.deep?'':'<div class="sub" style="margin-top:6px">この発表は、本文を読んだ解説がまだありません。テーマごとの決まった文を出しています。</div>'}`:''}
  <div class="sub" style="margin-top:8px"><a href="https://ripple.com/ripple-press/${esc(n.s)}/" target="_blank" rel="noopener">公式の原文を読む</a></div></div>`}
 /* 発表の題名の日本語（2026-11-22 に訳して入れた分。新しい発表は、下の決まった見出しが付く） */
 const JA={
@@ -854,6 +881,70 @@ const JA={
 'ripple-expands-scope-of-payment-activities-in-singapore-for-its-major-payment-institution-license':'リップル、シンガポールの決済の免許で扱える範囲を拡大',
 'rlusd-recognized-as-accepted-fiat-referenced-token-for-use-within-abu-dhabis-adgm':'RLUSD、アブダビの ADGM で使える通貨連動トークンとして認められる',
 'ripple-teams-up-with-mastercard-webbank-and-gemini':'リップル、Mastercard・WebBank・Gemini と協力'};
+/* XRP への効き方：発表ごとに、XRPL の仕組みから考えた経路と、効くための条件（2026-11-23 に書いた。d＝直接、i＝間接、f＝遠い） */
+const XI={
+'ripple-and-waterorg-deepen-partnership-to-drive-global-access-to-safe-water':['f','社会貢献の取り組みで、XRP の需要につながる経路はほぼありません。'],
+'ripple-reports-banner-year-approaching-900m-product-revenue-run-rate-signs-multi-solution-partnerships':['i','会社の売上が伸びると、決済・預かり・担保の事業を広げる力が増えます。それぞれの事業で XRPL と XRP が使われる分だけ効きます。売上のうち XRP が関わる割合は出ていません。'],
+'ripple-expands-collaboration-with-bny-across-custody-and-tokenized-trade-finance':['i','大手の信託銀行が預かりとトークン化で組むと、機関投資家が XRP と XRPL の資産を持つ時の受け皿が広がります。貿易金融の決済が XRPL の上で行われれば、手数料・準備金・交換の橋として XRP が使われます。'],
+'ripple-and-coinbase-partner-to-expand-access-to-rlusd':['i','RLUSD が XRPL の上で配られる分は、持つ人ごとに XRP の準備金が要り、RLUSD と XRP を交換する池にも XRP が置かれます。イーサリアムや Base の上で配られる分は、XRP を使いません。どのチェーンで増えるかが分かれ目です。'],
+'c2fo-and-ripple-partner-to-modernize-trade-finance-using-the-xrp-ledger':['d','貿易金融の決済を XRP Ledger の上で行う発表です。取引のたびに手数料として XRP が焼かれ、参加する会社の口座に XRP の準備金が要ります。通貨の交換が入れば、XRP が橋として使われます。量は取引の規模しだいです。'],
+'ripple-and-robinhood-partner-to-power-the-next-generation-of-finance':['i','個人投資家の多い証券会社と組むと、XRP と RLUSD を扱う窓口が増えます。Robinhood は XRP を大量に預かっている会社なので、XRPL の上のサービスにつながれば、XRP の使い道が増えます。'],
+'ripple-receives-final-occ-approval-to-establish-national-trust-bank':['i','連邦の免許を持つ信託銀行ができると、規制を受ける金融機関が、XRP と RLUSD をリップル社に預けやすくなります。預けられた XRP が担保や貸し借りに使われるようになると、市場に出る量が減ります。開業と預かり額が次の確認点です。'],
+'ripple-treasury-introduces-always-on-corporate-treasury-platform-to-modernize-corporate-cash-management':['i','企業の資金管理の中に、RLUSD と XRP を動かす道ができます。企業が24時間の送金に XRPL を使えば、手数料と交換の橋で XRP が使われます。初めは法定通貨とステーブルコインが中心になる見込みです。'],
+'aviva-investors-expands-its-tokenised-offering-with-the-launch-of-a-sterling-liquidity-fund-tokenised-share-class':['d','ファンドを XRPL の上でトークンにする取り組みです。発行する側と持つ側の口座に XRP の準備金が要り、売買や決済のたびに XRP が焼かれます。XRPL の取引所で売買されれば、XRP が交換の橋になります。'],
+'ripple-launches-support-for-institutions-to-access-real-world-asset-perpetual-swaps':['i','機関投資家が Ripple Prime を通して取引する商品が増えます。取引の担保に XRP が使えるようになるほど、XRP を持ったまま運用する理由が増えます。この商品そのものは XRP を使いません。'],
+'drivewealth-and-ripple-partner-to-bring-institutional-digital-asset-infrastructure-to-global-investing':['i','証券会社向けの基盤に、デジタル資産の預かりと売買が入ります。その先の証券会社が XRP を扱えば、買い手の窓口が増えます。'],
+'ripple-and-meritz-securities-partner-to-bring-institutional-custody-and-tokenization-to-korea-s-capital-markets':['i','韓国は XRP の保有が多い国です。証券会社が預かりとトークン化を始めると、機関が XRP を持つ受け皿ができ、XRPL の上で証券を発行する道も開きます。'],
+'standard-chartered-launches-rlusd-custody-and-joins-planned-collateral-integration-with-ripple-and-lmax-group':['i','大手銀行が RLUSD を預かり、担保に使う計画に入りました。同じ担保の仕組みに XRP が加われば、XRP を売らずに資金を借りられるようになり、市場に出る XRP が減ります。今は RLUSD が対象で、計画の段階です。'],
+'ripple-and-brevan-howard-deepen-relationship':['i','大手の運用会社との関係が深まると、機関投資家の資金が XRP と XRPL の商品に入る道が太くなります。具体的な金額は出ていません。'],
+'csdbr-and-ripple-use-the-xrpl-blockchain-to-expand-brazils-financial-market-infrastructure':['d','ブラジルの証券保管機関が XRPL を使います。記録や照会の取引が XRPL に乗るたびに、XRP が手数料として焼かれます。XRPL が国の金融の基盤に組み込まれる例として、ほかの国への広がりにもつながります。'],
+'ripple-treasury-brings-industry-s-first-governed-ai-for-enterprise-treasury':['i','AI が企業の資金の動かし方を提案する機能です。AI が24時間の送金を選ぶようになると、XRPL を通る送金が増える道ができます。今は人が承認する形で、XRPL との結びつきは書かれていません。'],
+'ripple-prime-launches-delta-one-business-expanding-equity-derivatives-capabilities-for-institutional-clients':['i','Ripple Prime の取り扱いが株のデリバティブに広がります。顧客が増え、担保に XRP を使えるようになるほど、XRP を持つ理由が増えます。この事業そのものは XRP を使いません。'],
+'ripple-and-jeonbuk-bank-partner-to-modernize-cross-border-payments-for-korea-s-regional-banking-sector':['i','銀行の国際送金にリップル社の仕組みが入ります。送金で XRP を橋に使う場合は、送るたびに XRP の売買が起き、流動性として XRP が置かれます。ステーブルコインで送る場合は、XRPL の上なら手数料と準備金で効きます。'],
+'ripple-prime-closes-275-million-senior-notes-offering':['i','Ripple Prime が事業を広げる資金を得ました。顧客に貸せる枠が増えると、XRP を担保にした貸し付けも広げやすくなります。'],
+'ripple-strengthens-digital-capital-markets-infrastructure-with-investments-in-zilo-and-licuido':['i','資本市場の基盤の会社への出資です。出資先の仕組みが XRPL につながれば、証券の発行と決済で XRP が使われます。今は出資の段階です。'],
+'ripple-receives-full-eu-mica-casp-license':['i','EU 全体で、暗号資産のサービスを正式に出せるようになります。銀行や企業に、XRP を使う送金と預かりを売れる国が増えます。使われるかどうかは、これからの契約しだいです。'],
+'ripple-and-sbi-group-partner-to-launch-ripple-usd-in-japan':['i','SBI は XRP を多く持ち、XRP を使う送金も行っている会社です。日本で RLUSD が XRPL の上で配られれば、XRP の準備金と、RLUSD と XRP を交換する流動性が要ります。日本の利用者にとって、XRPL を使う入口が増えます。'],
+'ripple-secures-preliminary-MiCA-CASP-license':['i','EU の免許の前の段階です。正式な免許につながり、EU で XRP を使うサービスを出す土台になります。'],
+'ripple-and-bitso-expand-partnership':['i','Bitso は、XRP を橋に使う中南米向けの送金で組んできた相手です。提携が広がると、XRP を通る送金の額が増える道があります。額は公表されていません。'],
+'ripple-expands-washington-dc-presence':['f','政策に関わる拠点の拡大です。XRP の扱いを決める法律づくりに働きかける力になりますが、需要に直接はつながりません。'],
+'new-partnerships-bring-rlusd-to-turkiye':['i','RLUSD を使える国が増えます。XRPL の上で配られる分は、XRP の準備金と交換の流動性が要ります。'],
+'ripple-prime-partners-with-edx-to-bridge-institutional-access-to-digital-asset-liquidity':['i','機関投資家が XRP などを売買する場所とつながります。売買しやすくなるほど、機関が XRP を持ちやすくなります。'],
+'ripple-prime-secures-usd200-million-debt-facility-from-neuberger-specialty-finance-to-expand-capacity':['i','Ripple Prime が顧客に貸せる資金が増えます。XRP を担保にした貸し付けを広げる余力になります。'],
+'ripple-reinforces-commitment-to-the-middle-east-with-expanded-presence-in-the-uae':['i','中東は、XRP を使う送金の相手が多い地域です。拠点が広がると、送金と預かりの契約を取りやすくなります。'],
+'ripple-partners-with-kbank-to-deploy-scalable-digital-asset-wallet-infrastructure-through-ripple-custody':['i','韓国の銀行が、リップル社の預かりの仕組みでウォレットを出します。銀行の利用者が XRP と XRPL の資産を持つ受け皿になります。'],
+'ripple-and-kyobo-life-insurance-partner-to-pioneer-korea-s-first-tokenised-government-bond-settlement-on-blockchain':['i','国債の決済をブロックチェーンで行う試みです。XRPL の上で行われれば、決済のたびに XRP が焼かれ、参加者に準備金が要ります。どのチェーンで行うかが確認点です。'],
+'ripple-treasury-launches-the-first-treasury-management-system-tms-with-native-digital-asset-capabilities':['i','企業の資金管理のソフトで、デジタル資産を直接扱えるようになります。企業が XRP と RLUSD を持って動かす入口になります。'],
+'ripple-joins-monetary-authority-of-singapore-s-bloom-initiative-and-partners-with-unloq-to-advance-programmable-settlement-infrastructure-in-trade-finance':['i','シンガポールの当局の取り組みに入り、貿易金融の決済の基盤を作ります。RLUSD と XRPL が決済に使われれば、XRP の手数料・準備金・交換の橋として効きます。'],
+'ripple-deepens-commitment-to-brazil-with-expanded-payments-offering-growing-customer-momentum-and-vasp-license-application':['i','ブラジルは、XRP を橋に使う送金が行われてきた国です。免許が取れて決済が広がると、XRP を通る送金が増える道があります。'],
+'ripple-to-secure-australian-financial-services-license-expanding-payments-offering-across-apac':['i','アジア太平洋で決済を広げる免許です。XRP を橋に使う送金を出せる国が増えます。'],
+'ripple-redefines-payments-with-end-to-end-stablecoin-platform-and-global-customer-momentum':['i','送金の中心をステーブルコインに置く仕組みです。XRPL の上で動く分は、手数料と準備金で XRP を使い、通貨の交換では XRP が橋になります。XRP をはさまない送金が増える面もあります。'],
+'aviva-investors-seeks-to-tokenise-products-on-the-xrp-ledger-in-collaboration-with-ripple':['d','運用会社が XRP Ledger の上で商品をトークンにします。発行・保有・売買のたびに、XRP の準備金と手数料が要ります。'],
+'ripple-accelerates-institutional-custody-adoption-with-security-compliance-and-staking-capabilities':['i','機関向けの預かりの機能が増えます。機関が XRP を安全に持てる受け皿が広がり、預けた資産を運用に回す道もできます。'],
+'ripple-announces-support-for-hyperliquid-expanding-institutional-access-to-onchain-liquidity':['i','機関投資家が、チェーンの上の取引の場を使えるようになります。XRP を担保や取引の対象として使える場が増えれば、XRP を持つ理由が増えます。'],
+'ripple-receives-full-eu-electronic-money-institution-license-in-luxembourg':['i','EU でお金を預かって送る免許です。RLUSD と XRP を使う送金を、EU の企業に正式に出せます。'],
+'ripple-expands-european-regulatory-footprint-with-preliminary-emi-approval-in-luxembourg':['i','EU の送金の免許の前の段階です。正式な免許につながり、XRP を使う送金を出す土台になります。'],
+'ripple-receives-fca-permissions-to-scale-ripple-payments-in-the-uk':['i','英国で決済を広げる許可です。リップル社の送金は XRP を橋に使えるので、英国の企業の送金に XRP が入る道ができます。'],
+'ripple-expands-partnership-with-tjm-to-enhance-institutional-trade-execution-and-clearing-services':['i','機関向けの売買の執行と清算が強くなります。Ripple Prime の顧客が増えるほど、XRP の売買と担保の利用が増える道があります。'],
+'ripple-payments-sees-first-european-bank-adoption-with-amina-bank':['i','欧州の銀行が、リップル社の送金を初めて採用しました。銀行の送金に XRPL が入り、XRP を橋に使う道ができます。'],
+'ripple-secures-federal-approval-to-establish-national-trust-bank':['i','信託銀行の設立に向けた連邦の承認です。最終承認につながり、金融機関が XRP と RLUSD を預ける受け皿になります。'],
+'tech-against-scams-coalition-launches-scamberry-pie-to-spark-holiday-conversations-about-online-safety':['f','詐欺対策の取り組みで、XRP の需要につながる経路はほぼありません。'],
+'redotpay-integrates-ripple-payments-to-extend-stablecoin-reach-and-launches-send-crypto-receive-ngn':['i','支払いのサービスが、リップル社の送金を組み込みます。暗号資産で送って現地の通貨で受け取る流れに XRPL が入れば、XRP の手数料と交換の橋で効きます。'],
+'ripple-expands-scope-of-payment-activities-in-singapore-for-its-major-payment-institution-license':['i','シンガポールで出せる決済の範囲が広がります。XRP を橋に使う送金を、アジアの企業に出しやすくなります。'],
+'rlusd-recognized-as-accepted-fiat-referenced-token-for-use-within-abu-dhabis-adgm':['i','アブダビの金融の特区で、RLUSD が使えるようになります。XRPL の上で使われる分は、XRP の準備金と交換の流動性が要ります。'],
+'ripple-teams-up-with-mastercard-webbank-and-gemini':['d','カードの決済の清算に、XRPL の上の RLUSD を使う試みです。清算の取引のたびに XRP が焼かれます。カードの大きな流れが XRPL に乗れば、XRPL の利用が大きく増えます。今は試験の段階です。']};
+const XS={d:['直接','go'],i:['間接','okc'],f:['遠い','no']};
+/* 新しい発表（上の表にないもの）用：テーマごとの経路と、効くための条件 */
+const XPATH={
+ bank:['i','免許や許可が出ると、その国で XRP を使う送金・預かりを正式に出せます。金融機関が XRP を預けて運用する受け皿にもなります。効くための条件は、取った免許の上で、実際に XRP を使う契約が増えることです。'],
+ pay:['i','リップル社の送金は、XRP を橋に使えます。その場合は、送るたびに XRP の売買が起き、流動性として XRP が置かれます。ステーブルコインで送る場合も、XRPL の上なら手数料と準備金で XRP を使います。'],
+ rlusd:['i','RLUSD が XRPL の上で増える分は、持つ人ごとに XRP の準備金が要り、RLUSD と XRP を交換する池に XRP が置かれます。ほかのチェーンで増える分は、XRP を使いません。'],
+ inst:['i','機関投資家が XRP を預けて、担保や運用に回せる場が広がります。担保に入った XRP は市場に出ないので、量への効きが大きい経路です。'],
+ rwa:['d','XRPL の上で資産を発行・保有・売買するたびに、XRP の準備金と手数料が要ります。XRPL の取引所で売買されれば、XRP が交換の橋になります。'],
+ multi:['i','XRP と RLUSD がほかのチェーンで使えるようになると、XRP を預けて使う場が増えます。ほかのチェーンに預けられた XRP は、市場に出ません。'],
+ ai:['i','AI が自動で支払う時に XRPL が選ばれれば、少額の取引が大量に起き、手数料として XRP が焼かれます。XRP そのもので払う場合は、支払いのための XRP が要ります。'],
+ xrp:['d','XRP と XRPL そのものの機能・利用の発表です。XRP の需要に、いちばん直接つながります。'],
+ other:['f','事業の中心ではない発表で、XRP の需要につながる経路は遠いです。']};
 const R_HEAD=['この分野の発表','計画・方針の発表','提携・申請の発表','許可・契約・買収の成立','サービスの開始・拡大','数字の公表'];
 /* AI を使わない解説：題名の言葉からテーマと段階を決め、決めてある文を当てる */
 const R_WHAT=['','リップル社が、この分野の計画・方針を発表しました。','提携または申請の発表です。稼働や数字は、まだ出ていません。','許可・契約・買収が成立したという発表です。事業を始める土台ができました。','サービスの開始・拡大の発表です。実際に使える状態になりました。','数字（売上・処理額・残高など）を公表した発表です。'];
@@ -869,12 +960,19 @@ const R_IMP={bank:'免許や許可がある国では、銀行や機関投資家�
 function ruleNews(s,d){
  const th=/water|charit|donat|pledge|nonprofit|appoint|board-of|presence|office|hub|accelerator|university|scam/.test(s)?'other':/rlusd|ripple-usd|rippleusd|stablecoin/.test(s)?'rlusd':/tokeni[sz]|real-world-asset|money-market|mmf|treasur(y-bills|ies)|government-bond|liquidity-fund|private-credit|capital-markets/.test(s)?'rwa':/occ|trust-bank|licen[sc]e|mica|emi-|fca|permissions|approval|vasp|charter|dfsa|adgm/.test(s)?'bank':/custody|prime|collateral|institution|brokerage|derivatives|perpetual|brevan|clearing|staking/.test(s)?'inst':/payment|cross-border|remittance|treasury|trade-finance|settlement/.test(s)?'pay':/bridge|evm|cross-chain|multichain|wormhole|axelar|chainlink|hyperliquid/.test(s)?'multi':/(^|-)ai(-|$)|agent/.test(s)?'ai':/xrp/.test(s)?'xrp':'other';
  const st=/reports|surpass|milestone|record|billion|million/.test(s)?5:/launch|introduc|live|available|expands|rolls-out|integrat|opens/.test(s)?4:/receives|secures|approval|licen[sc]e|granted|acquires|completes|closes/.test(s)?3:/partner|collaborat|joins|plans|seeks|applies|selects/.test(s)?2:1;
- const xm=/xrp/.test(s),L=LEDGER.find(t=>t.k===th);
- return {s,d,ai:true,rule:true,ja:'',th,st:th==='other'?0:st,xm,what:th==='other'?'事業の中心ではない分野の発表です。':R_WHAT[st],impact:R_IMP[th],xrp:(xm?'題名に XRP・XRPL が出ています。':'題名には XRP・XRPL が出ていません。')+(L?L.lt:'')}}
+ const xm=/xrp/.test(s),X=XI[s]||(xm&&th!=='other'?['d',XPATH[th][1]]:XPATH[th]);
+ return {s,d,ai:true,rule:true,ja:'',th,st:th==='other'?0:st,xm,xs:X[0],what:th==='other'?'事業の中心ではない分野の発表です。':R_WHAT[st],impact:R_IMP[th],xrp:X[1]}}
 function renderNews(){
  const dm=new Map((state.news||[]).map(n=>[n.s,n]));
- const N=(state.press||PRESS0).filter(x=>!/-(ja|ko|kr|pt)$|^ripple-(reforca|lanca)-/.test(x.s)).slice(0,40).map(x=>{const a=dm.get(x.s);return a&&a.ai?a:ruleNews(x.s,x.d||(a&&a.d)||'')});
- const note='<p class="sub">リップル社の公式の発表を、新しい順に並べています。題名は日本語に訳したものです（新しく出た発表は、訳が入るまで、テーマと段階の見出しになります）。解説は、題名の言葉からテーマと段階を決めて、決めてある文を当てたものです（AI は使っていません）。細かい中身は、原文で確かめてください。</p>';
+ const DEEP=window.DEEP||{},cl=(v,n)=>String(v||'').slice(0,n);
+ const N=(state.press||PRESS0).filter(x=>!/-(ja|ko|kr|pt)$|^ripple-(reforca|lanca)-/.test(x.s)).slice(0,40).map(x=>{const a=dm.get(x.s);if(a&&a.ai)return a;
+  const r=ruleNews(x.s,x.d||(a&&a.d)||''),D=DEEP[x.s];
+  if(D&&typeof D==='object'){   // 本文を読んで書いた解説がある発表は、それを使う
+   if(D.what)r.what=cl(D.what,400);if(D.impact)r.impact=cl(D.impact,700);if(D.xrp)r.xrp=cl(D.xrp,600);if(D.watch)r.watch=cl(D.watch,200);
+   if(XS[D.xs])r.xs=D.xs;if(TN[D.th])r.th=D.th;if(isFinite(D.st))r.st=Math.max(0,Math.min(5,Math.round(+D.st)));if(/^\d{4}-\d\d-\d\d$/.test(D.d||''))r.d=r.d||D.d;r.deep=D.src!=='未読'}
+  return r});
+ state.newsAll=N;
+ const note='<p class="sub">リップル社の公式の発表を、新しい順に並べています。題名は日本語に訳したものです（新しく出た発表は、訳が入るまで、テーマと段階の見出しになります）。「XRP への効き方」は、XRPL の仕組み（手数料の焼却・準備金・交換の橋・流動性の池・担保）から考えた経路と、効くための条件です。題名に XRP が出ていなくても、間接の経路があれば書いています。量の数字が公表されていないものは、経路として書いています。</p>';
  if($('nhome'))$('nhome').innerHTML=`<h2>最新の動向</h2>${N.length?N.filter(n=>n.th!=='other').slice(0,3).map(newsCard).join('')+'<div class="row"><button class="main" data-go="news">動向をもっと見る</button></div>':'<p class="sub">動向のデータがまだありません。</p>'}`;
  if($('news'))$('news').innerHTML=`<h2>リップル社と XRP の最新の動向</h2>${note}${N.length?N.slice(0,40).map(newsCard).join(''):'<p class="sub">動向のデータがまだありません。毎朝、新しい発表を取り込みます。</p>'}`;
 }
@@ -933,9 +1031,9 @@ function renderHold(){
 /* ---------- 今後の予測とロードマップ ---------- */
 function simulate(g){   // g＝値段の年の伸び（%）。毎月の予定額を買い、利息を足していく
  const p0=state.price,buys=hold.buys||[];let q=(+hold.baseQty||0)+buys.reduce((a,x)=>a+(+x.q||0),0);
- const r=(+hold.rate||0)/100*(+hold.share||0)/100,rows=[];let reach=null,spent=0;
- for(let m=1;m<=plan.years*12;m++){const p=p0*Math.pow(1+g/100,m/12);q+=cfg.budget/p;spent+=cfg.budget;const it=q*r/12;if(plan.reinvest)q+=it;
-  const inc=q*r/12*p;if(reach==null&&plan.goal>0&&inc>=plan.goal)reach=m;if(m%12===0)rows.push({y:m/12,p,q,val:q*p,inc})}
+ const r=(+hold.rate||0)/100*(+hold.share||0)/100,rows=[];let reach=null,spent=0,qb=0,qi=0;const q0=q;
+ for(let m=1;m<=plan.years*12;m++){const p=p0*Math.pow(1+g/100,m/12);q+=cfg.budget/p;qb+=cfg.budget/p;spent+=cfg.budget;const it=q*r/12;if(plan.reinvest){q+=it;qi+=it}
+  const inc=q*r/12*p;if(reach==null&&plan.goal>0&&inc>=plan.goal)reach=m;if(m%12===0)rows.push({y:m/12,p,q,q0,qb,qi,val:q*p,inc})}
  return {rows,reach,spent}}
 function renderRoad(){
  const S=state.S,bt=state.bt;if(!S||!$('road'))return;const p=state.price;
@@ -957,7 +1055,7 @@ function renderRoad(){
  <label>値段の年の伸び：中立（%）<input type="number" step="any" data-p="base" value="${plan.base}"></label>
  <label>値段の年の伸び：強気（%）<input type="number" step="any" data-p="bull" value="${plan.bull}"></label>
  <label>利息の扱い<select data-p="reinvest"><option value="1" ${plan.reinvest?'selected':''}>XRP のまま足して貸す</option><option value="0" ${plan.reinvest?'':'selected'}>受け取って使う</option></select></label></div></details>
- <div class="kv">${sc3.map(s=>{const l=s.r.rows[s.r.rows.length-1],pr=plan.goal>0?Math.min(100,l.inc/plan.goal*100):0;return `<div><span>${s.n}（年 ${s.g>=0?'+':''}${num(s.g,0)}%）</span><b class="${s.c}">${yen(l.val)}</b><span>利息 月 ${yen(l.inc)}</span><div class="bar"><i style="width:${pr}%"></i></div><span>目標：${when(s.r.reach)}</span></div>`}).join('')}</div>
+ <div class="kv">${sc3.map(s=>{const l=s.r.rows[s.r.rows.length-1],pr=plan.goal>0?Math.min(100,l.inc/plan.goal*100):0;return `<div><span>${s.n}（年 ${s.g>=0?'+':''}${num(s.g,0)}%）</span><b class="${s.c}">${yen(l.val)}</b><span>利息 月 ${yen(l.inc)}</span><span class="how">＝ ${num(l.q,0)} XRP × ${num(l.p,1)}円</span><span class="how">数の内訳：今 ${num(l.q0,0)}＋買い増し ${num(l.qb,0)}＋利息 ${num(l.qi,0)}</span><span class="how">値段：今 ${num(state.price,1)}円 → ${plan.years}年後 ${num(l.p,1)}円</span><div class="bar"><i style="width:${pr}%"></i></div><span>目標：${when(s.r.reach)}</span></div>`}).join('')}</div>
  <details><summary>年ごとの表を見る</summary><div class="wrap" style="margin-top:10px"><table><tr><th>年後</th>${sc3.map(s=>`<th>${s.n} 資産額</th><th>${s.n} 利息（月）</th>`).join('')}</tr>
  ${ys.map(y=>`<tr><td>${y}年後</td>${sc3.map(s=>{const x=s.r.rows[y-1];return `<td>${yen(x.val)}</td><td>${yen(x.inc)}</td>`}).join('')}</tr>`).join('')}</table></div>
  <p class="note">前提：今の保有数から始めて、毎月 ${yen(cfg.budget)}（設定の予定額）を買い続け、利率 年 ${num(+hold.rate||0,1)}%・貸し出す割合 ${num(+hold.share||0,0)}% で貸した場合の計算です。${plan.years}年で買う額の合計は ${yen(sc3[1].r.spent)}。値段の伸びは自分で置く前提で、当たるとは限りません。</p></details>
@@ -1060,6 +1158,7 @@ document.addEventListener('change',e=>{const t=e.target;
  else if(t.dataset.h){const v=parseFloat(t.value);hold[t.dataset.h]=isFinite(v)?v:0;set('hold',hold);renderHold();renderRoad()}
  else if(t.dataset.p){let v=parseFloat(t.value);if(isFinite(v)){if(t.dataset.p==='years')v=Math.max(1,Math.min(30,Math.round(v)));plan[t.dataset.p]=v;set('plan',plan);renderRoad()}}
  else if(t.id==='memo'){memo=t.value;set('memo',memo)}
+ else if(t.dataset.th!=null){const i=+t.dataset.th,f=t.dataset.f;thesisEdit(L=>{if(!L[i])return;if(f==='si')L[i].si=Math.max(0,Math.min(4,+t.value||0));else L[i][f]=String(t.value).slice(0,f==='n'?40:800)})}
  else if(t.dataset.mk){const v=parseFloat(t.value);if(isFinite(v)){cfg.mk=cfg.mk||{};const k=t.dataset.mk;cfg.mk[k]=cfg.mk[k]||{};cfg.mk[k][t.dataset.f]=v;set('cfg',cfg);renderAll()}}
  else if(t.dataset.led){cfg.led=cfg.led||{};const k=t.dataset.led;cfg.led[k]=cfg.led[k]||{};cfg.led[k][t.dataset.f]=+t.value;set('cfg',cfg);renderAll()}
  else if(t.dataset.view){cfg.view=cfg.view||{};cfg.view[t.dataset.view]=+t.value;set('cfg',cfg);renderAll()}
@@ -1074,6 +1173,9 @@ noteMode(get('notes',false));
 go(['home','news','fore','asset','more'].includes(get('tab','home'))?get('tab','home'):'home');
 document.addEventListener('click',async e=>{const t=e.target;
  if(t.dataset.go){go(t.dataset.go);return}
+ if(t.id==='thAdd'){thesisEdit(L=>{if(L.length<12)L.push({n:'新しい段',si:3,f:'ここに裏付けを書きます。',w:'',th:[]})});return}
+ if(t.dataset.thdel!=null){if(confirm('この段を消しますか？'))thesisEdit(L=>{L.splice(+t.dataset.thdel,1)});return}
+ if(t.id==='thReset'){if(confirm('自分で直した内容を消して、調べた内容に戻しますか？')){delete cfg.thesis;delete cfg.thesisAt;set('cfg',cfg);renderAll()}return}
  if(t.id==='retry'){state.src={};load();return}
  if(t.id==='noteBtn'){const on=!document.body.classList.contains('notes');set('notes',on);noteMode(on);return}
  if(t.tagName==='H2'&&t.parentElement.tagName==='SECTION'){t.parentElement.classList.toggle('closed');if(t.parentElement.id==='test')drawChart();return}
