@@ -124,7 +124,7 @@ body:not([data-tab=more]) footer{display:none}
 #tabs span{pointer-events:none}
 #tabs button.on{color:var(--acc);background:rgba(53,224,255,.1)}
 #tabs button.on svg{filter:drop-shadow(0 0 6px rgba(53,224,255,.8))}
-@keyframes fadeup{from{opacity:0;transform:translateY(10px)}}
+@keyframes fadeup{from{opacity:.5;transform:translateY(8px)}}
 @keyframes grow{from{transform:scaleX(0)}}
 @keyframes ringin{from{stroke-dasharray:0 351.9}}
 .bar i{transform-origin:left;animation:grow .9s cubic-bezier(.2,.8,.2,1)}
@@ -543,7 +543,7 @@ function analyze2(S){
  const avg=k=>led.reduce((a,t)=>a+t[k],0)/led.length,w=isFinite(cfg.linkW)?Math.max(0,Math.min(100,cfg.linkW)):30;
  Object.assign(B,{led,ad:avg('score'),adF:avg('scoreF'),lk:avg('link'),linkW:w,mkt:mkCalc()});B.now=B.ad;B.fut=B.adF;
  const stage=(B.ad+B.adF)/2,base=B.mkt.score==null?stage:B.mkt.score*.6+stage*.4;   // 市場の伸び 6：段階 4
- B.score=base*(100-w)/100+B.lk*w/100;
+ B.base=base;B.score=base*(100-w)/100+B.lk*w/100;
  B.wl=worldLink(led.map(t=>({k:t.k,n:t.n,score:t.score})));
  B.fresh=(state.press||[]).filter(x=>x.d&&x.d>'2026-11-22'&&!/-(ja|ko|kr|pt)$/.test(x.s)).slice(0,12).map(x=>{const t=THEMES.find(t=>t.re.test(x.s));
   const st=/reports|surpass|milestone|record|billion|million/i.test(x.s)?5:/launch|introduc|live|available|expands|rolls-out|integrat|opens/i.test(x.s)?4:/receives|secures|approval|licen[sc]e|granted|acquires|completes|closes/i.test(x.s)?3:/partner|collaborat|joins|plans|seeks|applies|selects/i.test(x.s)?2:1,cur=t&&led.find(l=>l.k===t.k);
@@ -559,7 +559,13 @@ function renderBiz2(){
  const top=`<div class="big">${ring(B.mkt.score==null?0:B.mkt.score,'市場の伸び',col(B.mkt.score||0))}${ring((B.ad+B.adF)/2,'許可・契約の段階',col(B.ad))}${ring(B.lk,'XRP の量の確かさ',col(B.lk))}
  <div><div class="amt"><span>リップル社の市場（中立・5年）</span><b class="go">${B.mkt.gm==null?'—':num(B.mkt.gm,1)+' 倍'}</b></div>
  <div class="sub">将来性に入れる点：<b style="color:var(--ink);font-size:16px">${num(B.score,0)}</b></div></div></div>
- <label class="sub">「XRP の量が公式に出ているか」を、点にどれだけ入れるか：<b>${B.linkW}%</b>（残りは 市場の伸び 6：段階 4）<br><input type="range" min="0" max="100" step="10" data-c="linkW" value="${B.linkW}" style="width:100%;max-width:340px"></label>
+ <div class="tc" style="margin-top:10px"><b>点の付け方を変える</b>
+ <div class="sub" style="margin:4px 0">XRP が使われた量は、まだ公式の数字が出ていません。その弱みを、点にどれだけ入れるかを決めます。右へ動かすほど厳しく見て、点が下がります。</div>
+ <input type="range" min="0" max="100" step="10" data-c="linkW" value="${B.linkW}" style="width:100%">
+ <div class="rgh"><span>0%：市場の伸びと段階だけで見る</span><span>100%：XRP の量の確かさだけで見る</span></div>
+ <div class="kv"><div><span>今の設定</span><b id="lwPct">${B.linkW}%</b></div>
+ <div><span>事業の分析の点</span><b id="lwBiz" class="go">${num(B.score,0)}</b></div>
+ <div><span>総合点（指を離すと反映）</span><b id="lwTot">${state.total==null?'—':num(state.total,0)}</b></div></div></div>
  ${mkHtml(B.mkt)}
  <h3>許可・契約がどの段階まで進んだか（市場を取る土台）</h3>
  <div class="tcs">${B.led.map(t=>`<div class="tc"><div class="tch"><b>${t.n}</b><span class="chip ${t.l>=3?'go':t.l===2?'okc':'no'}">${LKS[t.l]}</span></div>
@@ -667,7 +673,7 @@ function renderAll(){
  const S=state.S;if(!S){return}
  const i=S.n-1,price=S.c[i];S.ind.man[i]=fmScore();
  state.biz=analyze2(S);S.ind.biz[i]=state.biz.score;
- const s=total(S,i),bt=backtest(S);state.bt=bt;state.price=price;
+ const s=total(S,i),bt=backtest(S);state.bt=bt;state.price=price;state.total=s;
  const gs={p:total(S,i,'p'),f:total(S,i,'f'),w:total(S,i,'w'),t:total(S,i,'t')};
  let b=band(s),down=false;if(b&&gs.f!=null&&gs.f<cfg.minF){down=true;b=b==='strong'?'ok':'skip'}
  const cls={strong:'go',ok:'okc',skip:'no'}[b]||'';
@@ -1037,6 +1043,9 @@ document.addEventListener('click',async e=>{const t=e.target;
  else if(t.id==='reload'){const last=get('reloadAt',0);if(Date.now()-last<600e3){$('reloadMsg').textContent='取り直しは10分に1回までです';return}
   set('reloadAt',Date.now());const y=new Date().getUTCFullYear();for(const k of['c.xrp_jpy.'+y,'c.btc_jpy.'+y,'fng','fund','xs','cg','ltvl','lstb','ldex','rl','fl','stAll','defi','am','press','mkj','cg2','newsj'])   /* world（配信のためた分）は消さない */{try{localStorage.removeItem(LS+k)}catch(e){}delete mem[k]}state.src={};load()}
 });
+// スライドを動かしている間も、数字をその場で変える
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset.c==='linkW'&&state.biz&&state.biz.base!=null){const w=+t.value,B=state.biz;
+ if($('lwPct'))$('lwPct').textContent=w+'%';if($('lwBiz'))$('lwBiz').textContent=num(B.base*(100-w)/100+B.lk*w/100,0);if($('lwTot'))$('lwTot').textContent='…'}});
 let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(drawChart,150)});
 
 /* ---------- 読み込み ---------- */
