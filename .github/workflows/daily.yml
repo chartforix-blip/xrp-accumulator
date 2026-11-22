@@ -1,0 +1,73 @@
+name: daily-analysis
+on:
+  schedule:
+    - cron: "50 21 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+  issues: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: update
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, subprocess, datetime, urllib.request
+          os.makedirs("data", exist_ok=True)
+          today = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+          def load(p, d):
+              try:
+                  return json.load(open(p))
+              except Exception:
+                  return d
+          # 1) market sizes from DefiLlama (used as a growth index)
+          try:
+              r = urllib.request.Request("https://api.llama.fi/protocols", headers={"User-Agent": "personal-reader"})
+              p = json.load(urllib.request.urlopen(r, timeout=90))
+              def s(cats):
+                  return round(sum((x.get("tvl") or 0) for x in p if x.get("category") in cats))
+              row = {"d": today, "lend": s({"Lending"}), "rwa": s({"RWA"}), "bridge": s({"Bridge", "Canonical Bridge", "Cross Chain Bridge"}),
+                     "xrpl_rwa": round(sum(((x.get("chainTvls") or {}).get("XRPL") or 0) for x in p if x.get("category") == "RWA"))}
+              hist = [h for h in load("data/markets.json", []) if h.get("d") != today]
+              hist.append(row)
+              json.dump(hist[-800:], open("data/markets.json", "w"))
+              print("markets", row)
+          except Exception as e:
+              print("markets failed", e)
+          # 2) new Ripple press releases -> issue (email)
+          try:
+              xml = open("data/press-release.xml", encoding="utf-8").read()
+              slugs = []
+              for m in re.finditer(r"<loc>https://ripple\.com/ripple-press/([^/<]+)/?</loc>", xml):
+                  sl = re.sub(r"[^A-Za-z0-9_-]", "", m.group(1))
+                  if sl and not re.search(r"-(ja|ko|kr|pt)$", sl):
+                      slugs.append(sl)
+              seen = load("data/press-seen.json", None)
+              new = [] if seen is None else [x for x in slugs if x not in set(seen)]
+              json.dump(sorted(set(slugs) | set(seen or [])), open("data/press-seen.json", "w"))
+              def stage(x):
+                  if re.search(r"reports|surpass|milestone|record|billion|million", x): return "5 数字の公表"
+                  if re.search(r"launch|introduc|live|available|expands|rolls-out|integrat|opens", x): return "4 稼働"
+                  if re.search(r"receives|secures|approval|licen[sc]e|granted|acquires|completes|closes", x): return "3 許可・契約の成立"
+                  if re.search(r"partner|collaborat|joins|plans|seeks|applies|selects", x): return "2 提携・申請"
+                  return "1 構想・計画"
+              print("press", len(slugs), "new", len(new))
+              if new:
+                  lines = ["- [%s](https://ripple.com/ripple-press/%s/)（段階の目安：%s）" % (x.replace("-", " "), x, stage(x)) for x in new[:20]]
+                  body = "リップル社の新しい発表が出ました。\n\n" + "\n".join(lines) + "\n\n段階の目安は題名の言葉から機械的に出したものです。画面の「事業の分析」で、テーマの段階を上げるかどうかを決めてください：https://chartforix-blip.github.io/xrp-accumulator/"
+                  subprocess.run(["gh", "issue", "create", "--title", "リップル社の新しい発表 %d件" % len(new), "--body", body], check=True)
+          except Exception as e:
+              print("press failed", e)
+          PY
+      - name: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git diff --cached --quiet || git commit -m "daily analysis data"
+          git pull --rebase
+          git push
