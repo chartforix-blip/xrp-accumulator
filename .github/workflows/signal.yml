@@ -1,0 +1,74 @@
+name: signal-alert
+on:
+  schedule:
+    - cron: "5 22 * * *"
+    - cron: "5 10 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+  issues: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: check signal
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess, datetime, urllib.request
+          TH = 40
+          def get(y):
+              r = urllib.request.Request("https://public.bitbank.cc/xrp_jpy/candlestick/1day/%d" % y, headers={"User-Agent": "personal-reader"})
+              return json.load(urllib.request.urlopen(r, timeout=30))["data"]["candlestick"][0]["ohlcv"]
+          y = datetime.datetime.utcnow().year
+          rows = []
+          for yy in range(y - 5, y + 1):
+              rows += get(yy)
+          ts = [r[5] for r in rows]
+          c = [float(r[3]) for r in rows]
+          wk = None; last = None; wg = 0.0; wl = 0.0; wn = 0
+          for i in range(len(c)):
+              w = (ts[i] // 86400000 + 3) // 7
+              if wk is not None and w != wk:
+                  pc = c[i - 1]
+                  if last is not None:
+                      ch = pc - last; g = max(ch, 0); l = max(-ch, 0); wn += 1
+                      if wn <= 14:
+                          wg += g / 14; wl += l / 14
+                      else:
+                          wg = (wg * 13 + g) / 14; wl = (wl * 13 + l) / 14
+                  last = pc
+              wk = w
+          ch = c[-1] - last
+          g = (wg * 13 + max(ch, 0)) / 14; l = (wl * 13 + max(-ch, 0)) / 14
+          rsi = 100.0 if l == 0 else 100 - 100 / (1 + g / l)
+          on = rsi <= TH
+          os.makedirs("data", exist_ok=True)
+          prev = None
+          try:
+              prev = json.load(open("data/signal.json"))["on"]
+          except Exception:
+              pass
+          now = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+          json.dump({"on": on, "rsi": round(rsi, 1), "price": c[-1], "th": TH, "checked": now}, open("data/signal.json", "w"))
+          print("rsi", round(rsi, 1), "on", on, "prev", prev)
+          url = "https://chartforix-blip.github.io/xrp-accumulator/"
+          if on and prev is not True:
+              title = "XRP 買い増しの合図が出ました（週足 RSI %.1f）" % rsi
+              body = "週足 RSI が %d 以下になりました。\n\n- 週足 RSI：%.1f\n- XRP の値段：%.3f 円（bitbank）\n- 点検した時刻：%s\n\n画面で総合点と買う額の目安を見てください：%s\n\n過去に起きた割合にもとづく合図で、これからの値動きを約束するものではありません。" % (TH, rsi, c[-1], now, url)
+              subprocess.run(["gh", "issue", "create", "--title", title, "--body", body], check=True)
+          elif (not on) and prev is True:
+              title = "XRP 買い増しの合図が消えました（週足 RSI %.1f）" % rsi
+              body = "週足 RSI が %d を上回りました。\n\n- 週足 RSI：%.1f\n- XRP の値段：%.3f 円（bitbank）\n- 点検した時刻：%s\n\n%s" % (TH, rsi, c[-1], now, url)
+              subprocess.run(["gh", "issue", "create", "--title", title, "--body", body], check=True)
+          PY
+      - name: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git diff --cached --quiet || git commit -m "update signal state"
+          git pull --rebase
+          git push
