@@ -1,0 +1,23 @@
+name: fetch-ripple-press
+on:
+  schedule:
+    - cron: "17 21 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: fetch
+        run: |
+          mkdir -p data
+          curl -fsSL --max-time 60 -A "Mozilla/5.0 (compatible; personal-reader; 1 request per day)" https://ripple.com/sitemap/press-release.xml -o data/new.xml || true
+          if [ -s data/new.xml ] && grep -q "ripple-press" data/new.xml; then mv data/new.xml data/press-release.xml; else rm -f data/new.xml; echo "fetch failed, keeping previous file"; fi
+      - name: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git diff --cached --quiet || (git commit -m "update press list" && git push)
