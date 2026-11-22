@@ -139,6 +139,12 @@ body:not([data-tab=more]) footer{display:none}
 .bd{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
 .bd span{padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--sub);font-size:13px}
 .bd span.got{color:#04121a;background:linear-gradient(90deg,var(--acc),var(--go));border:0;font-weight:700;box-shadow:0 0 14px rgba(39,217,163,.4)}
+.big.rs{justify-content:space-around;align-items:flex-start;gap:8px}
+.rn{width:98px;text-align:center}
+.rn .ring{width:92px;height:92px}
+.rn.main{width:200px}
+.rn.main .ring{width:140px;height:140px}
+.rbl{font-size:13px;line-height:1.4;margin-top:2px}
 .stg{display:flex;gap:4px;margin:6px 0}
 .stg i{flex:1;height:9px;border-radius:5px;background:rgba(255,255,255,.09)}
 .stg i.on{background:linear-gradient(90deg,var(--acc),var(--go))}
@@ -554,11 +560,13 @@ function renderBiz2(){
  for(const q of['.big','.tcs'])el.querySelector(q)&&el.querySelector(q).remove();
  el.querySelectorAll('p.note').forEach(p=>{if(/30本|足し引き|発表が増えているテーマ/.test(p.textContent))p.remove()});
  const h=el.querySelector('h2');h.textContent='事業の分析（市場規模の予測）';
- const ring=(v,label,c)=>`<svg class="ring ${c}" viewBox="0 0 136 136" role="img" aria-label="${label} ${num(v,0)}点"><circle cx="68" cy="68" r="56" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="10"/><circle cx="68" cy="68" r="56" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-dasharray="${v/100*351.9} 351.9" transform="rotate(-90 68 68)"/><text x="68" y="76" text-anchor="middle" font-size="42" font-weight="700" fill="currentColor">${num(v,0)}</text><text x="68" y="98" text-anchor="middle" font-size="12" fill="#93a4b8">${label}</text></svg>`;
+ const ring=(v,label,c)=>`<svg class="ring ${c}" viewBox="0 0 136 136" role="img" aria-label="${label} ${num(v,0)}点"><circle cx="68" cy="68" r="56" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="10"/><circle cx="68" cy="68" r="56" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-dasharray="${v/100*351.9} 351.9" transform="rotate(-90 68 68)"/><text x="68" y="76" text-anchor="middle" font-size="42" font-weight="700" fill="currentColor">${num(v,0)}</text></svg>`;
+ const wM=(100-B.linkW)*.6,wS=(100-B.linkW)*.4;
+ const rb=(v,label,c,wid,wv)=>`<div class="rn">${ring(v,label,c)}<div class="rbl">${label}</div><div class="sub">重み <b id="${wid}">${num(wv,0)}%</b></div></div>`;
  const col=v=>v>=65?'go':v>=40?'okc':'no',sel=(k,f,cur,arr,from)=>`<select data-led="${k}" data-f="${f}">${arr.map((x,i)=>i<from?'':`<option value="${i}" ${cur===i?'selected':''}>${x}</option>`).join('')}</select>`;
- const top=`<div class="big">${ring(B.mkt.score==null?0:B.mkt.score,'市場の伸び',col(B.mkt.score||0))}${ring((B.ad+B.adF)/2,'許可・契約の段階',col(B.ad))}${ring(B.lk,'XRP の量の確かさ',col(B.lk))}
- <div><div class="amt"><span>リップル社の市場（中立・5年）</span><b class="go">${B.mkt.gm==null?'—':num(B.mkt.gm,1)+' 倍'}</b></div>
- <div class="sub">将来性に入れる点：<b style="color:var(--ink);font-size:16px">${num(B.score,0)}</b></div></div></div>
+ const top=`<div class="big rs"><div class="rn main" id="lwRing">${ring(B.score,'事業の分析の点',col(B.score))}<div class="rbl"><b>事業の分析の点</b></div><div class="sub">下の3つを重みで合わせた点</div></div></div>
+ <div class="big rs">${rb(B.mkt.score==null?0:B.mkt.score,'市場の伸び',col(B.mkt.score||0),'lwW1',wM)}${rb((B.ad+B.adF)/2,'許可・契約の段階',col(B.ad),'lwW2',wS)}${rb(B.lk,'XRP の量の確かさ',col(B.lk),'lwW3',B.linkW)}</div>
+ <div class="sub" style="text-align:center;margin-top:6px">リップル社の市場（中立・5年）：<b class="go" style="font-size:16px">${B.mkt.gm==null?'—':num(B.mkt.gm,1)+' 倍'}</b></div>
  <div class="tc" style="margin-top:10px"><b>点の付け方を変える</b>
  <div class="sub" style="margin:4px 0">XRP が使われた量は、まだ公式の数字が出ていません。その弱みを、点にどれだけ入れるかを決めます。右へ動かすほど厳しく見て、点が下がります。</div>
  <input type="range" min="0" max="100" step="10" data-c="linkW" value="${B.linkW}" style="width:100%">
@@ -1045,7 +1053,10 @@ document.addEventListener('click',async e=>{const t=e.target;
 });
 // スライドを動かしている間も、数字をその場で変える
 document.addEventListener('input',e=>{const t=e.target;if(t.dataset.c==='linkW'&&state.biz&&state.biz.base!=null){const w=+t.value,B=state.biz;
- if($('lwPct'))$('lwPct').textContent=w+'%';if($('lwBiz'))$('lwBiz').textContent=num(B.base*(100-w)/100+B.lk*w/100,0);if($('lwTot'))$('lwTot').textContent='…'}});
+ const v=B.base*(100-w)/100+B.lk*w/100;
+ if($('lwPct'))$('lwPct').textContent=w+'%';if($('lwBiz'))$('lwBiz').textContent=num(v,0);if($('lwTot'))$('lwTot').textContent='…';
+ const R=$('lwRing');if(R){const sv=R.querySelector('svg'),c=sv.querySelectorAll('circle')[1],tx=sv.querySelector('text');if(c)c.setAttribute('stroke-dasharray',(v/100*351.9)+' 351.9');if(tx)tx.textContent=num(v,0);sv.setAttribute('class','ring '+(v>=65?'go':v>=40?'okc':'no'))}
+ const W=[['lwW1',(100-w)*.6],['lwW2',(100-w)*.4],['lwW3',w]];for(const [id,x] of W)if($(id))$(id).textContent=num(x,0)+'%'}});
 let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(drawChart,150)});
 
 /* ---------- 読み込み ---------- */
