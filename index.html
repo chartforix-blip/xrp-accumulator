@@ -355,6 +355,35 @@ async function pressList(){
    c={day:today(),at:Date.now(),list:u.slice(0,90).map(x=>({d:x.mod>'2026-10-16'?x.mod.slice(0,10):'',s:x.loc.replace(/^.*ripple-press\//,'').replace(/\/$/,'').replace(/[^\w-]/g,'')}))};set('press',c)}
   catch(e){state.src[label]={ok:false,msg:e.message+'。'+(c?'前に取った一覧を使っています':'2026-11-22 時点の一覧を使っています')};return c?c.list:PRESS0}}
  state.src[label]={ok:true,msg:'取得 '+new Date(c.at).toLocaleString('ja-JP')};return c.list}
+/* ---------- 世の中の流れ（金融・決済・AI の公式の配信）との結びつき ---------- */
+const FEED_URL='https://chartforix-blip.github.io/xrp-accumulator/data/feeds/';
+const FEEDS=[['fed','米連邦準備'],['bis','BIS'],['occ','米通貨監督庁'],['ecb','欧州中央銀行'],['fsa','金融庁'],['boj','日本銀行'],['openai','OpenAI'],['googleai','Google'],['stripe','Stripe']];
+const WORLD=[
+ {k:'stable',n:'ステーブルコイン・デジタル通貨',re:/stablecoin|tokeni[sz]ed deposit|deposit token|digital (dollar|euro|currenc)|cbdc|ステーブルコイン|デジタル通貨|電子決済手段|デジタルユーロ/i,to:['rlusd','pay']},
+ {k:'infra',n:'決済・金融インフラ',re:/payment|settlement|cross-border|clearing|fedwire|fednow|iso 20022|market infrastructure|決済|送金|資金移動/i,to:['pay','bank']},
+ {k:'token',n:'資産のトークン化・暗号資産の決まり',re:/tokeni[sz]|digital asset|crypto|custody|trust bank|トークン|暗号資産|カストディ/i,to:['rwa','inst','bank']},
+ {k:'agent',n:'AI エージェント（自動の支払い・運用）',re:/agent|agentic|autonomous|move funds|checkout|commerce protocol|エージェント/i,to:['ai']},
+ {k:'aifin',n:'AI と金融',re:/(\bai\b|artificial intelligence|生成AI|人工知能)[\s\S]{0,80}(bank|financ|payment|treasury|risk|金融)|(bank|financ|payment|treasury|金融)[\s\S]{0,80}(\bai\b|artificial intelligence|生成AI)/i,to:['ai','pay']}];
+function parseFeed(t,f){const out=[],dec=s=>s.replace(/<!\[CDATA\[|\]\]>/g,'').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'").replace(/\s+/g,' ').trim();
+ for(const it of t.split(/<(?:item|entry)[\s>]/).slice(1,400)){const ti=(it.match(/<title[^>]*>([\s\S]*?)<\/title>/)||[])[1];if(!ti)continue;
+  const d=(it.match(/<(?:pubDate|updated|published|dc:date)[^>]*>([^<]+)</)||[])[1],ts=d?Date.parse(d.replace(' JST',' +0900')):NaN;
+  let l=(it.match(/<link[^>]*>([\s\S]*?)<\/link>/)||[])[1]||(it.match(/<link[^>]*href="([^"]+)"/)||[])[1]||'';l=dec(l);
+  out.push({f,s:dec(ti).slice(0,160),t:isFinite(ts)?ts:0,l:/^https?:\/\//.test(l)?l.slice(0,300):''})}
+ return out}
+async function worldFeeds(){
+ const label='金融・AI の公式の配信（9つ）';let c=get('world',null);
+ if(!c||c.day!==today()){let ok=0;const seen=new Map(((c&&c.items)||[]).map(x=>[x.f+'|'+x.s,x]));
+  await Promise.all(FEEDS.map(async([f])=>{try{const r=await fetch(FEED_URL+f+'.xml',{cache:'no-store'});if(!r.ok)return;const now=Date.now();for(const x of parseFeed(await r.text(),f)){if(!x.t)x.t=now;const k=x.f+'|'+x.s;if(!seen.has(k))seen.set(k,x)}ok++}catch(e){}}));
+  if(!ok){state.src[label]={ok:false,msg:'取れませんでした'+(c?'。前に取った分を使っています':'')};return c?c.items:[]}
+  const cut=Date.now()-200*864e5,items=[...seen.values()].filter(x=>x.t>=cut).sort((a,b)=>b.t-a.t).slice(0,900);
+  c={day:today(),at:Date.now(),ok,items};if(!set('world',c)){c.items=items.slice(0,300);set('world',c)}}
+ state.src[label]={ok:true,msg:c.ok+' / '+FEEDS.length+' の配信を取得 '+new Date(c.at).toLocaleString('ja-JP')};return c.items}
+function worldLink(th){
+ const items=state.world||[],now=Date.now(),D=864e5,FN=Object.fromEntries(FEEDS);
+ return WORLD.map(w=>{const hit=items.filter(x=>w.re.test(x.s)),n=hit.filter(x=>now-x.t<=30*D).length,p=hit.filter(x=>now-x.t>30*D&&now-x.t<=60*D).length;
+  const rs=Math.max(...w.to.map(k=>(th.find(t=>t.k===k)||{score:0}).score)),up=n>p&&n>=2,strong=rs>=50;
+  const v=!items.length?'データなし':p===0?(strong&&n>0?'リップルが先に動いている':'まだ比べられない（配信をためている途中）'):up&&strong?'追い風に乗っている':up&&!strong?'流れはあるが、リップルの動きが弱い':!up&&strong?'リップルが先に動いている':'様子見';
+  return {k:w.k,n:w.n,cnt:n,p,rs,v,adj:v==='追い風に乗っている'?4:v==='流れはあるが、リップルの動きが弱い'?-4:0,to:w.to.map(k=>(th.find(t=>t.k===k)||{}).n).filter(Boolean),heads:hit.slice(0,4).map(x=>({s:x.s,l:x.l,src:FN[x.f]||x.f,d:x.t?new Date(x.t).toISOString().slice(0,10):''}))}})}
 function analyze(S){
  const list=(state.press||PRESS0).filter(x=>!/-(ja|ko|kr|pt)$/.test(x.s)),rec=list.slice(0,30),old=list.slice(30,60),am=state.am||[],i=S.n-1;
  const g=o=>o&&o.ago>0?(o.now-o.ago)/o.ago*100:null,lin=(v,z,f)=>v==null?null:Math.max(0,Math.min(100,(v-z)/(f-z)*100));
@@ -379,8 +408,9 @@ function analyze(S){
   {n:'ステーブルコイン',mn:'市場全体',mg:g(state.stAll),rn:'RLUSD',rg:g(state.rl),share:state.stAll&&state.rl?state.rl.now/state.stAll.now*100:null,sn:'RLUSD の市場での割合'},
   {n:'DeFi（預けられた資産）',mn:'全チェーン',mg:g(state.defi),rn:'XRPL',rg:g(xt),share:state.defi&&xt?xt.now/state.defi.now*100:null,sn:'XRPL の割合'}];
  const gr=g(state.rl),rlp=state.rl&&gr!=null?[['今の伸びが続く',1],['伸びが半分になる',.5],['伸びが止まる',0]].map(([n,f])=>({n,v:state.rl.now*Math.pow(1+gr*f/100,4)})):null;
- const now=sw?ss/sw:null,fut=sw?sf/sw:null;
- return {th,now,fut,score:now==null?null:(now+fut)/2,mk,rlp}}
+ const wl=worldLink(th),adj=wl.reduce((a,w)=>a+w.adj,0);
+ const now=sw?ss/sw:null,fut=sw?Math.max(0,Math.min(100,sf/sw+adj)):null;   // 世の中の流れに乗っているテーマの分を、見込みに足し引きする
+ return {th,now,fut,score:now==null?null:(now+fut)/2,mk,rlp,wl,adj}}
 const NX={inst:'担保に入った XRP の量が公表されるか。レンディングの機能が有効になるか。',xrp:'レンディングと金庫の機能が有効になった後、XRP の貸し借りの残高が増えるか。',bank:'銀行の口座（連邦準備の口座）が認められるか。免許を使った預かりと決済が始まるか。',pay:'送金のうち、XRP を橋に使う分がどれだけあるかが公表されるか。',multi:'ほかのチェーンに預けられた XRP の量が増えるか。XRPL EVM サイドチェーンが使われ始めるか。',rwa:'トークン化した資産が、XRPL の上で売買や担保に使われるか（置いてあるだけでないか）。',rlusd:'XRPL の上の RLUSD の割合が上がるか。',ai:'AI の支払いの金額が、実際の数字で公表されるか。'};
 const num0=v=>num(v,1),pm=v=>v==null?'—':(v>=0?'+':'')+num(v,0)+'%';
 
@@ -530,6 +560,13 @@ function renderBiz(){
  ${t.ev?`<p><b>裏付けの数字</b>：${esc(t.ev)}</p>`:'<p><b>裏付けの数字</b>：自動で取れる数字がありません（発表の本数だけで見ています。上限60点）</p>'}
  ${t.heads.length?'<p><b>新しい発表</b></p><ul>'+t.heads.map(h=>`<li><a href="https://ripple.com/ripple-press/${esc(h.s)}/" target="_blank" rel="noopener">${title(h.s)}</a>${h.d?'（'+esc(h.d)+'）':''}</li>`).join('')+'</ul>':''}
  <label class="sub">XRP への結びつきの見方を変える <select data-link="${t.k}">${[[1,'強'],[.6,'中'],[.3,'弱']].map(([v,x])=>`<option value="${v}" ${t.l===v?'selected':''}>${x}</option>`).join('')}</select></label></details></div>`).join('')}</div>
+ <h3>金融・AI の流れとの結びつき（公式の配信から自動）</h3>
+ <div class="tcs">${B.wl.map(w=>`<div class="tc"><div class="tch"><b>${w.n}</b></div>
+ <div><span class="chip ${w.v==='追い風に乗っている'?'go':w.v==='リップルが先に動いている'?'okc':'no'}" style="white-space:normal">${w.v}</span></div>
+ <div class="sub" style="margin-top:6px">世の中の発表 この30日 ${w.cnt}本（前の30日 ${w.p}本）</div>
+ <div class="cmp"><span>リップル側の点 ${num(w.rs,0)}（${esc(w.to.join('、'))}）</span><div class="bar"><i style="width:${w.rs}%"></i></div></div>
+ ${w.heads.length?`<details><summary>世の中の発表を見る</summary><ul>${w.heads.map(h=>`<li>${h.l?`<a href="${esc(h.l)}" target="_blank" rel="noopener">${esc(h.s)}</a>`:esc(h.s)}（${esc(h.src)}${h.d?'・'+esc(h.d):''}）</li>`).join('')}</ul></details>`:''}</div>`).join('')}</div>
+ <p class="note">米連邦準備・BIS・米通貨監督庁・欧州中央銀行・金融庁・日本銀行・OpenAI・Google・Stripe の公式の配信を毎日取り、題名の言葉でテーマに分けています。世の中の発表が増えていて、対応するリップル側の点が50以上なら「追い風に乗っている」とし、この先の見込みに1つあたり4点を足し引きします（今の足し引き：${B.adj>=0?'+':''}${B.adj}点）。配信は開いた日からためていくので、初めのうちは前の30日の本数が少なく出ます。</p>
  <h3>世の中の流れとの比べ（90日の伸び）</h3>
  ${B.mk.map(m=>`<div class="rg"><div class="rgh"><b>${m.n}</b><span>${m.rg==null||m.mg==null?'データなし':m.rg>m.mg?'<b class="go">市場より速い</b>':'<b class="no">市場より遅い</b>'}${m.share==null?'':'　'+m.sn+' '+num(m.share,2)+'%'}</span></div>
  <div class="cmp"><span>${m.mn} ${pm(m.mg)}</span><div class="bar"><i style="width:${Math.max(0,Math.min(100,(m.mg||0)+30))}%;background:#7a8a9b"></i></div></div>
@@ -731,7 +768,7 @@ document.addEventListener('click',async e=>{const t=e.target;
  else if(t.id==='exp'){const data={app:'xrp-accumulator',version:1,exported:new Date().toISOString(),cfg,hold,memo,fm,plan,snaps};
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,1)],{type:'application/json'}));a.download='xrp-accumulator-'+today()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$('fileMsg').textContent='書き出しました：'+a.download}
  else if(t.id==='reload'){const last=get('reloadAt',0);if(Date.now()-last<600e3){$('reloadMsg').textContent='取り直しは10分に1回までです';return}
-  set('reloadAt',Date.now());const y=new Date().getUTCFullYear();for(const k of['c.xrp_jpy.'+y,'c.btc_jpy.'+y,'fng','fund','xs','cg','ltvl','lstb','ldex','rl','fl','stAll','defi','am','press']){try{localStorage.removeItem(LS+k)}catch(e){}delete mem[k]}state.src={};load()}
+  set('reloadAt',Date.now());const y=new Date().getUTCFullYear();for(const k of['c.xrp_jpy.'+y,'c.btc_jpy.'+y,'fng','fund','xs','cg','ltvl','lstb','ldex','rl','fl','stAll','defi','am','press'])   /* world（配信のためた分）は消さない */{try{localStorage.removeItem(LS+k)}catch(e){}delete mem[k]}state.src={};load()}
 });
 let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(drawChart,150)});
 
@@ -759,7 +796,8 @@ async function load(){
    daily('defi','llama','https://api.llama.fi/v2/historicalChainTvl',j=>ago90(j.map(d=>[d.date,d.tvl])),'DeFi の市場全体（DefiLlama）'),
    daily('am','xrpscan','https://api.xrpscan.com/api/v1/amendments',j=>j.map(a=>({n:String(a.name),e:!!a.enabled,c:+a.count||0,t:+a.threshold||0,s:!!a.supported,on:a.enabled_on?String(a.enabled_on).slice(0,10):''})),'XRPL の機能の投票（XRPScan）'),
    pressList()]);
-  Object.assign(state,{rl,fl,stAll,defi,am,press,xt:ago90(ltvl)});
+  const world=await worldFeeds();
+  Object.assign(state,{rl,fl,stAll,defi,am,press,world,xt:ago90(ltvl)});
   const S=build(x,new Map(btc.map(r=>[r[0],r[3]])),new Map(fng||[]),{tvl:new Map(ltvl||[]),stb:new Map(lstb||[]),dex:new Map(ldex||[])});
   if(fund!=null)S.ind.fund[S.n-1]=fund;state.fund=fund;
   if(xs&&xs.date){snaps[xs.date]=Object.assign(snaps[xs.date]||{},{tx:xs.tx,pay:xs.pay,act:xs.act},cg?{supply:cg}:{});set('snaps',snaps)}
