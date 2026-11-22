@@ -1,0 +1,21 @@
+name: news-probe
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  models: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: probe
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "== catalog =="
+          curl -sS -m 40 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" https://models.github.ai/catalog/models | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d)); [print(m.get('id'), '|', m.get('rate_limit_tier')) for m in d[:60]]" || echo "catalog failed"
+          echo "== chat =="
+          curl -sS -m 60 -w "\nHTTP %{http_code}\n" -H "Authorization: Bearer $GH_TOKEN" -H "Content-Type: application/json" https://models.github.ai/inference/chat/completions -d '{"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"Say OK in Japanese, one word."}],"max_tokens":20}' | head -c 1500
+          echo "== page =="
+          curl -sS -m 40 -o page.html -w "HTTP %{http_code} size %{size_download}\n" -A "Mozilla/5.0 (compatible; personal-reader; 1 request per day)" https://ripple.com/ripple-press/ripple-receives-final-occ-approval-to-establish-national-trust-bank/
+          python3 -c "import re; t=open('page.html',encoding='utf-8',errors='ignore').read(); t=re.sub(r'<script[\s\S]*?</script>|<style[\s\S]*?</style>',' ',t); t=re.sub(r'<[^>]+>',' ',t); t=re.sub(r'\s+',' ',t); i=t.find('OCC'); print(len(t)); print(t[max(0,i-200):i+600])"
