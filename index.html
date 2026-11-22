@@ -50,6 +50,7 @@ canvas{width:100%;height:260px;display:block}
 a{color:#1a56a0}
 footer{max-width:980px;margin:0 auto;padding:8px 16px 40px;color:var(--sub);font-size:13px}
 .kv .how{display:block;font-size:11.5px;color:var(--sub);line-height:1.5}
+.mine{margin:8px 0;padding:10px;border:1px solid var(--line);border-radius:12px}
 </style>
 <style>
 /* 見た目（未来・SF の色合い） */
@@ -209,6 +210,7 @@ details p{margin:4px 0 2px}
 </nav>
 <footer>XRP のシンボルは、コミュニティが作った XRP の印を使っています。この道具はリップル社や XRP の公式のものではありません。注文や送金の機能はありません。API の鍵や個人情報は使いません。記録はこの端末のブラウザの中だけに保存します。</footer>
 <script src="analysis.js"></script>
+<script src="analysis-auto.js"></script>
 <script>
 'use strict';
 /* ---------- 保存 ---------- */
@@ -276,7 +278,7 @@ let fm=get('fm',{v:{},at:''});
 const fmScore=()=>{let s=50;for(const [k] of FM)s+=10*(+fm.v[k]||0);return s};
 let hold=get('hold',{baseQty:0,baseAvg:0,rate:3,share:100,buys:[]});
 let memo=get('memo','');
-const PLAN0={goal:50000,years:10,bear:-5,base:10,bull:25,reinvest:1,events:[]};
+const PLAN0={monthly:0,goal:50000,years:10,bear:-5,base:10,bull:25,reinvest:1,events:[]};
 let plan=Object.assign({},PLAN0,get('plan',{}));if(!Array.isArray(plan.events))plan.events=[];
 let snaps=get('snaps',{});   // 日付 -> {tx,pay,act,escrow,supply}
 const state={S:null,src:{},fund:null};
@@ -974,7 +976,7 @@ function renderNews(){
  state.newsAll=N;
  const note='<p class="sub">リップル社の公式の発表を、新しい順に並べています。題名は日本語に訳したものです（新しく出た発表は、訳が入るまで、テーマと段階の見出しになります）。「XRP への効き方」は、XRPL の仕組み（手数料の焼却・準備金・交換の橋・流動性の池・担保）から考えた経路と、効くための条件です。題名に XRP が出ていなくても、間接の経路があれば書いています。量の数字が公表されていないものは、経路として書いています。</p>';
  if($('nhome'))$('nhome').innerHTML=`<h2>最新の動向</h2>${N.length?N.filter(n=>n.th!=='other').slice(0,3).map(newsCard).join('')+'<div class="row"><button class="main" data-go="news">動向をもっと見る</button></div>':'<p class="sub">動向のデータがまだありません。</p>'}`;
- if($('news'))$('news').innerHTML=`<h2>リップル社と XRP の最新の動向</h2>${note}${N.length?N.slice(0,40).map(newsCard).join(''):'<p class="sub">動向のデータがまだありません。毎朝、新しい発表を取り込みます。</p>'}`;
+ if($('news'))$('news').innerHTML=`<h2>リップル社と XRP の最新の動向</h2>${note}<div class="sub">解説の自動更新：${window.AUTO&&window.AUTO.at?esc(String(window.AUTO.at))+'（'+esc(String(window.AUTO.status||''))+'・自動で書いた解説 '+num(+window.AUTO.n||0,0)+'本）':'まだ動いていません'}</div>${N.length?N.slice(0,40).map(newsCard).join(''):'<p class="sub">動向のデータがまだありません。毎朝、新しい発表を取り込みます。</p>'}`;
 }
 /* 行の長さをそろえる機能がないブラウザ（古い iPhone など）用：幅をせばめて、行の長さをそろえる */
 function balanceFallback(force){
@@ -1032,7 +1034,7 @@ function renderHold(){
 function simulate(g){   // g＝値段の年の伸び（%）。毎月の予定額を買い、利息を足していく
  const p0=state.price,buys=hold.buys||[];let q=(+hold.baseQty||0)+buys.reduce((a,x)=>a+(+x.q||0),0);
  const r=(+hold.rate||0)/100*(+hold.share||0)/100,rows=[];let reach=null,spent=0,qb=0,qi=0;const q0=q;
- for(let m=1;m<=plan.years*12;m++){const p=p0*Math.pow(1+g/100,m/12);q+=cfg.budget/p;qb+=cfg.budget/p;spent+=cfg.budget;const it=q*r/12;if(plan.reinvest){q+=it;qi+=it}
+ for(let m=1;m<=plan.years*12;m++){const p=p0*Math.pow(1+g/100,m/12);const mb=Math.max(0,+plan.monthly||0);q+=mb/p;qb+=mb/p;spent+=mb;const it=q*r/12;if(plan.reinvest){q+=it;qi+=it}
   const inc=q*r/12*p;if(reach==null&&plan.goal>0&&inc>=plan.goal)reach=m;if(m%12===0)rows.push({y:m/12,p,q,q0,qb,qi,val:q*p,inc})}
  return {rows,reach,spent}}
 function renderRoad(){
@@ -1047,7 +1049,14 @@ function renderRoad(){
    range=R.map(r=>`<div class="rg"><div class="rgh"><b>${r.y}年後</b><span>真ん中 <b>${num(r.v[2],0)}円</b>（${num(r.v[0],0)}〜${num(r.v[4],0)}円）</span></div><div class="rgt"><i class="rw" style="left:${X(r.v[0])}%;width:${X(r.v[4])-X(r.v[0])}%"></i><i class="rb" style="left:${X(r.v[1])}%;width:${X(r.v[3])-X(r.v[1])}%"></i><i class="rm" style="left:${X(r.v[2])}%"></i><i class="rc" style="left:${X(p)}%"></i></div></div>`).join('')}}
  const today0=today(),ev=(plan.events||[]).slice().sort((a,b)=>a.d<b.d?-1:1);
  $('road').innerHTML=`<h2>今後の予測とロードマップ</h2>
- <h3>目標の利息までの道のり</h3><div class="sub">目標：月 ${yen(plan.goal)}・${plan.years}年後の姿</div>
+ <h3>目標の利息までの道のり</h3><div class="sub">下の3つは、あなたの数字です。ここで変えると、すぐ計算し直します。</div>
+ <div class="grid mine">
+ <label>今の保有数（XRP）<input type="number" step="any" min="0" data-h="baseQty" value="${esc(hold.baseQty)}"></label>
+ <label>毎月の買い増し（円）<input type="number" step="1000" min="0" data-p="monthly" value="${esc(plan.monthly||0)}"></label>
+ <label>貸し出しの利率（年 %）<input type="number" step="any" min="0" data-h="rate" value="${esc(hold.rate)}"></label></div>
+ ${(hold.buys||[]).length?`<div class="sub">買い増しの記録の ${num((hold.buys||[]).reduce((a,x)=>a+(+x.q||0),0),0)} XRP も、今の保有に足しています。</div>`:''}
+ ${((+hold.baseQty||0)+(hold.buys||[]).reduce((a,x)=>a+(+x.q||0),0))>0?'':'<div class="sub no">保有数が 0 です。上に入れると、あなたの数で計算します。</div>'}
+ <div class="sub">目標：月 ${yen(plan.goal)}・${plan.years}年後の姿${(+plan.monthly||0)>0?'':'（買い増しなしで計算）'}</div>
  <details><summary>目標・年数・値段の伸びを変える</summary><div class="grid">
  <label>目標の利息（月・円）<input type="number" step="1000" min="0" data-p="goal" value="${plan.goal}"></label>
  <label>見る年数<input type="number" step="1" min="1" max="30" data-p="years" value="${plan.years}"></label>
@@ -1055,10 +1064,11 @@ function renderRoad(){
  <label>値段の年の伸び：中立（%）<input type="number" step="any" data-p="base" value="${plan.base}"></label>
  <label>値段の年の伸び：強気（%）<input type="number" step="any" data-p="bull" value="${plan.bull}"></label>
  <label>利息の扱い<select data-p="reinvest"><option value="1" ${plan.reinvest?'selected':''}>XRP のまま足して貸す</option><option value="0" ${plan.reinvest?'':'selected'}>受け取って使う</option></select></label></div></details>
- <div class="kv">${sc3.map(s=>{const l=s.r.rows[s.r.rows.length-1],pr=plan.goal>0?Math.min(100,l.inc/plan.goal*100):0;return `<div><span>${s.n}（年 ${s.g>=0?'+':''}${num(s.g,0)}%）</span><b class="${s.c}">${yen(l.val)}</b><span>利息 月 ${yen(l.inc)}</span><span class="how">＝ ${num(l.q,0)} XRP × ${num(l.p,1)}円</span><span class="how">数の内訳：今 ${num(l.q0,0)}＋買い増し ${num(l.qb,0)}＋利息 ${num(l.qi,0)}</span><span class="how">値段：今 ${num(state.price,1)}円 → ${plan.years}年後 ${num(l.p,1)}円</span><div class="bar"><i style="width:${pr}%"></i></div><span>目標：${when(s.r.reach)}</span></div>`}).join('')}</div>
+ <div class="kv">${sc3.map(s=>{const l=s.r.rows[s.r.rows.length-1],pr=plan.goal>0?Math.min(100,l.inc/plan.goal*100):0;return `<div><span>${s.n}（年 ${s.g>=0?'+':''}${num(s.g,0)}%）</span><b class="${s.c}">${yen(l.val)}</b><span>利息 月 ${yen(l.inc)}</span><span class="how">＝ ${num(l.q,0)} XRP × ${num(l.p,1)}円</span><span class="how">今の保有 ${num(l.q0,0)} XRP（${yen(l.q0*l.p)}分）</span><span class="how">買い増し ${num(l.qb,0)} XRP（${yen(l.qb*l.p)}分）</span><span class="how">利息 ${num(l.qi,0)} XRP（${yen(l.qi*l.p)}分）</span><span class="how">値段：今 ${num(state.price,1)}円 → ${plan.years}年後 ${num(l.p,1)}円</span><div class="bar"><i style="width:${pr}%"></i></div><span>目標：${when(s.r.reach)}</span></div>`}).join('')}</div>
+ ${(+plan.monthly||0)>0?'<div class="sub">買い増しは毎月同じ円の額です。値段が高い場合ほど、買える XRP の数は少なくなります。利息の XRP の数も、その分だけ少なくなります。円に直した額は、値段が高い場合の方が大きくなります。</div>':''}
  <details><summary>年ごとの表を見る</summary><div class="wrap" style="margin-top:10px"><table><tr><th>年後</th>${sc3.map(s=>`<th>${s.n} 資産額</th><th>${s.n} 利息（月）</th>`).join('')}</tr>
  ${ys.map(y=>`<tr><td>${y}年後</td>${sc3.map(s=>{const x=s.r.rows[y-1];return `<td>${yen(x.val)}</td><td>${yen(x.inc)}</td>`}).join('')}</tr>`).join('')}</table></div>
- <p class="note">前提：今の保有数から始めて、毎月 ${yen(cfg.budget)}（設定の予定額）を買い続け、利率 年 ${num(+hold.rate||0,1)}%・貸し出す割合 ${num(+hold.share||0,0)}% で貸した場合の計算です。${plan.years}年で買う額の合計は ${yen(sc3[1].r.spent)}。値段の伸びは自分で置く前提で、当たるとは限りません。</p></details>
+ <p class="note">前提：今の保有数から始めて、毎月 ${yen(Math.max(0,+plan.monthly||0))}（上で入れた額）を買い続け、利率 年 ${num(+hold.rate||0,1)}%・貸し出す割合 ${num(+hold.share||0,0)}% で貸した場合の計算です。${plan.years}年で買う額の合計は ${yen(sc3[1].r.spent)}。値段の伸びは自分で置く前提で、当たるとは限りません。</p></details>
  <h3>1〜3年後の値段の目安</h3><div class="sub">過去の値動きの幅を、今の値段に当てた場合</div>
  ${range||'<p>データが足りません</p>'}
  <div class="legend"><span><i style="background:var(--no);width:3px;height:14px"></i>今の値段</span><span><i style="background:#fff;width:4px;height:14px"></i>真ん中</span><span><i style="background:linear-gradient(90deg,var(--acc),var(--go))"></i>よくあった幅（半分の日がこの中）</span><span><i style="background:rgba(53,224,255,.4);height:4px"></i>ほぼ全部の幅</span></div>
@@ -1165,7 +1175,7 @@ document.addEventListener('change',e=>{const t=e.target;
  else if(t.dataset.link){cfg.link=cfg.link||{};cfg.link[t.dataset.link]=+t.value;set('cfg',cfg);renderAll()}
  else if(t.dataset.fm){fm.v[t.dataset.fm]=+t.value;fm.at=today();set('fm',fm);renderAll()}
  else if(t.id==='imp'&&t.files[0]){const fr=new FileReader();fr.onload=()=>{try{const j=JSON.parse(fr.result);if(j.app!=='xrp-accumulator')throw new Error('このツールのファイルではありません');
-   if(j.cfg){set('cfg',j.cfg);cfg=loadCfg()}if(j.hold){hold=j.hold;if(!Array.isArray(hold.buys))hold.buys=[];set('hold',hold)}if(typeof j.memo==='string'){memo=j.memo;set('memo',memo)}if(j.plan&&typeof j.plan==='object'){plan=Object.assign({},PLAN0);for(const k of['goal','years','bear','base','bull','reinvest'])if(isFinite(j.plan[k]))plan[k]=Number(j.plan[k]);plan.events=Array.isArray(j.plan.events)?j.plan.events.map(x=>({id:String(x.id),d:String(x.d),t:String(x.t)})):[];set('plan',plan)}if(j.fm&&j.fm.v){fm={v:j.fm.v,at:String(j.fm.at||'')};set('fm',fm)}if(j.snaps&&typeof j.snaps==='object'){snaps=j.snaps;set('snaps',snaps)}
+   if(j.cfg){set('cfg',j.cfg);cfg=loadCfg()}if(j.hold){hold=j.hold;if(!Array.isArray(hold.buys))hold.buys=[];set('hold',hold)}if(typeof j.memo==='string'){memo=j.memo;set('memo',memo)}if(j.plan&&typeof j.plan==='object'){plan=Object.assign({},PLAN0);for(const k of['monthly','goal','years','bear','base','bull','reinvest'])if(isFinite(j.plan[k]))plan[k]=Number(j.plan[k]);plan.events=Array.isArray(j.plan.events)?j.plan.events.map(x=>({id:String(x.id),d:String(x.d),t:String(x.t)})):[];set('plan',plan)}if(j.fm&&j.fm.v){fm={v:j.fm.v,at:String(j.fm.at||'')};set('fm',fm)}if(j.snaps&&typeof j.snaps==='object'){snaps=j.snaps;set('snaps',snaps)}
    renderAll();$('fileMsg').textContent='読み込みました（'+(j.exported||'')+' に書き出したファイル）'}catch(err){$('fileMsg').textContent='読み込めません：'+err.message}};fr.readAsText(t.files[0])}
 });
 function noteMode(on){document.body.classList.toggle('notes',on);$('noteBtn').textContent=on?'説明を隠す':'説明を表示'}
