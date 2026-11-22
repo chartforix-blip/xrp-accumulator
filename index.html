@@ -367,15 +367,21 @@ function analyze(S){
   rwa:S.ind.tvl[i]!=null?'XRPL に預けられた資産（XRP の値動きを除く）90日で '+pm(S.ind.tvl[i]):'',
   inst:lend?'レンディングの機能の投票 '+(lend.e?'有効になった':lend.c+' / '+lend.t+' 票'):'',
   xrp:am.length?'この1年で有効になった新機能 '+newF.length+' 個':''};
- let sw=0,ss=0;const th=THEMES.map(t=>{const hit=x=>t.re.test(x.s),n=rec.filter(hit).length,p=old.filter(hit).length;
+ let sw=0,ss=0,sf=0;const th=THEMES.map(t=>{const hit=x=>t.re.test(x.s),n=rec.filter(hit).length,p=old.filter(hit).length;
   const sAnn=Math.max(0,Math.min(100,n*10+(n>p?15:n<p?-10:0))),sNum=NU[t.k]==null?null:NU[t.k],score=sNum==null?Math.min(60,sAnn):(sAnn+sNum)/2;
-  const l=(cfg.link&&isFinite(cfg.link[t.k]))?+cfg.link[t.k]:t.l;sw+=l;ss+=l*score;
-  return Object.assign({},t,{cnt:n,p,sAnn,sNum,score,l,ev:ev[t.k]||'',stage:sNum!=null&&sNum>=50?'数字が出ている':n>0?'発表が先行':'動きなし',heads:rec.filter(hit).slice(0,4)})});
+  // この先の見込み：発表の増え方が同じだけ続いた場合
+  /* 増減の半分だけ続くと見る（発表の本数は波があるため） */ const nF=Math.max(n/2,n+(n-p)/2),sAnnF=Math.max(0,Math.min(100,nF*10+(n>p?15:n<p?-10:0))),scoreF=sNum==null?Math.min(60,sAnnF):(sAnnF+sNum)/2;
+  const out=n>p&&(sNum==null||sNum>=50)?'伸びる見込み':n<p&&(sNum==null||sNum<50)?'弱まる見込み':'様子見';
+  const l=(cfg.link&&isFinite(cfg.link[t.k]))?+cfg.link[t.k]:t.l;sw+=l;ss+=l*score;sf+=l*scoreF;
+  return Object.assign({},t,{scoreF,out,nx:NX[t.k],cnt:n,p,sAnn,sNum,score,l,ev:ev[t.k]||'',stage:sNum!=null&&sNum>=50?'数字が出ている':n>0?'発表が先行':'動きなし',heads:rec.filter(hit).slice(0,4)})});
  // 世の中の流れ（市場全体）との比べ
  const xt=state.xt,mk=[
   {n:'ステーブルコイン',mn:'市場全体',mg:g(state.stAll),rn:'RLUSD',rg:g(state.rl),share:state.stAll&&state.rl?state.rl.now/state.stAll.now*100:null,sn:'RLUSD の市場での割合'},
   {n:'DeFi（預けられた資産）',mn:'全チェーン',mg:g(state.defi),rn:'XRPL',rg:g(xt),share:state.defi&&xt?xt.now/state.defi.now*100:null,sn:'XRPL の割合'}];
- return {th,score:sw?ss/sw:null,mk}}
+ const gr=g(state.rl),rlp=state.rl&&gr!=null?[['今の伸びが続く',1],['伸びが半分になる',.5],['伸びが止まる',0]].map(([n,f])=>({n,v:state.rl.now*Math.pow(1+gr*f/100,4)})):null;
+ const now=sw?ss/sw:null,fut=sw?sf/sw:null;
+ return {th,now,fut,score:now==null?null:(now+fut)/2,mk,rlp}}
+const NX={inst:'担保に入った XRP の量が公表されるか。レンディングの機能が有効になるか。',xrp:'レンディングと金庫の機能が有効になった後、XRP の貸し借りの残高が増えるか。',bank:'銀行の口座（連邦準備の口座）が認められるか。免許を使った預かりと決済が始まるか。',pay:'送金のうち、XRP を橋に使う分がどれだけあるかが公表されるか。',multi:'ほかのチェーンに預けられた XRP の量が増えるか。XRPL EVM サイドチェーンが使われ始めるか。',rwa:'トークン化した資産が、XRPL の上で売買や担保に使われるか（置いてあるだけでないか）。',rlusd:'XRPL の上の RLUSD の割合が上がるか。',ai:'AI の支払いの金額が、実際の数字で公表されるか。'};
 const num0=v=>num(v,1),pm=v=>v==null?'—':(v>=0?'+':'')+num(v,0)+'%';
 
 /* ---------- 指標 ---------- */
@@ -513,13 +519,14 @@ function renderBiz(){
  const up=B.th.filter(t=>t.cnt>t.p).map(t=>t.n),gap=B.th.filter(t=>t.stage==='発表が先行'&&t.l>=.6).map(t=>t.n);
  $('biz').innerHTML=`<h2>事業の動きの分析（公式発表から自動）</h2>
  <div class="big"><svg class="ring ${B.score>=60?'go':B.score>=40?'okc':'no'}" viewBox="0 0 136 136" role="img" aria-label="事業の勢い ${num(B.score,0)}点"><circle cx="68" cy="68" r="56" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="10"/><circle cx="68" cy="68" r="56" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(B.score||0)/100*351.9} 351.9" transform="rotate(-90 68 68)"/><text x="68" y="76" text-anchor="middle" font-size="42" font-weight="700" fill="currentColor">${num(B.score,0)}</text><text x="68" y="98" text-anchor="middle" font-size="13" fill="#93a4b8">事業の勢い</text></svg>
- <div><div class="sub">発表が増えているテーマ</div><div><b>${up.length?up.join('、'):'なし'}</b></div>
+ <div><div class="amt"><span>今 → この先の見込み</span><b>${num(B.now,0)} → <span class="${B.fut>B.now?'go':B.fut<B.now?'no':''}" style="display:inline;font-size:inherit;color:${B.fut>B.now?'var(--go)':B.fut<B.now?'var(--no)':'inherit'}">${num(B.fut,0)}</span></b></div><div class="sub">発表が増えているテーマ</div><div><b>${up.length?up.join('、'):'なし'}</b></div>
  <div class="sub" style="margin-top:6px">発表はあるが、数字がまだ伴っていないテーマ</div><div><b>${gap.length?gap.join('、'):'なし'}</b></div></div></div>
  <div class="tcs">${B.th.map(t=>`<div class="tc"><div class="tch"><b>${t.n}</b><span class="chip ${chip[t.stage]}">${t.stage}</span></div>
  <div class="bar"><i style="width:${t.score}%"></i></div>
  <div class="sub">発表 ${t.cnt}本（前は ${t.p}本）・XRP への結びつき <b>${LN(t.l)}</b></div>
+ <div class="sub">見通し：<b class="${t.out==='伸びる見込み'?'go':t.out==='弱まる見込み'?'no':''}">${t.out}</b>（${num(t.score,0)} → ${num(t.scoreF,0)}）</div>
  <details><summary>くわしく</summary>
- <p><b>社会との結びつき</b>：${t.soc}</p><p><b>XRP との結びつき</b>：${t.xr}</p>
+ <p><b>社会との結びつき</b>：${t.soc}</p><p><b>XRP との結びつき</b>：${t.xr}</p><p><b>次に見る所</b>：${t.nx}</p>
  ${t.ev?`<p><b>裏付けの数字</b>：${esc(t.ev)}</p>`:'<p><b>裏付けの数字</b>：自動で取れる数字がありません（発表の本数だけで見ています。上限60点）</p>'}
  ${t.heads.length?'<p><b>新しい発表</b></p><ul>'+t.heads.map(h=>`<li><a href="https://ripple.com/ripple-press/${esc(h.s)}/" target="_blank" rel="noopener">${title(h.s)}</a>${h.d?'（'+esc(h.d)+'）':''}</li>`).join('')+'</ul>':''}
  <label class="sub">XRP への結びつきの見方を変える <select data-link="${t.k}">${[[1,'強'],[.6,'中'],[.3,'弱']].map(([v,x])=>`<option value="${v}" ${t.l===v?'selected':''}>${x}</option>`).join('')}</select></label></details></div>`).join('')}</div>
@@ -527,6 +534,8 @@ function renderBiz(){
  ${B.mk.map(m=>`<div class="rg"><div class="rgh"><b>${m.n}</b><span>${m.rg==null||m.mg==null?'データなし':m.rg>m.mg?'<b class="go">市場より速い</b>':'<b class="no">市場より遅い</b>'}${m.share==null?'':'　'+m.sn+' '+num(m.share,2)+'%'}</span></div>
  <div class="cmp"><span>${m.mn} ${pm(m.mg)}</span><div class="bar"><i style="width:${Math.max(0,Math.min(100,(m.mg||0)+30))}%;background:#7a8a9b"></i></div></div>
  <div class="cmp"><span>${m.rn} ${pm(m.rg)}</span><div class="bar"><i style="width:${Math.max(0,Math.min(100,(m.rg||0)+30))}%"></i></div></div></div>`).join('')}
+ ${B.rlp?`<h3>RLUSD の発行額の1年後の目安（今 ${num(state.rl.now/1e8,1)}億ドル）</h3>`+B.rlp.map(r=>`<div class="cmp"><span>${r.n}：${num(r.v/1e8,1)}億ドル</span><div class="bar"><i style="width:${Math.min(100,r.v/B.rlp[0].v*100)}%"></i></div></div>`).join(''):''}
+ <p class="note">この先の見込みは、発表の増え方が同じだけ続いた場合の計算です。事業の勢いの点は、今と見込みの平均です。</p>
  <p class="note">AI エージェントの支払いの市場は、無料で自動で取れる数字が見つかっていないので、ここには入れていません。</p>
  <h3>XRPL の新しい機能の投票（必要な票に届くと有効になる）</h3>
  ${pend.length?pend.map(a=>`<div class="cmp"><span>${AN[a.n]}　${a.c} / ${a.t} 票</span><div class="bar"><i style="width:${Math.min(100,a.c/a.t*100)}%"></i></div></div>`).join(''):'<p class="sub">投票中の機能のデータがありません</p>'}
