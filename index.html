@@ -85,6 +85,31 @@ a{color:#6cc8ff}
 .steps div{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:rgba(255,255,255,.03);font-size:14px}
 .steps b{display:block;color:var(--acc);font-size:13px;letter-spacing:.12em}
 .steps strong{display:block;font-size:16px}
+/* 文を減らして、図で見せる */
+body:not(.notes) main .note{display:none}
+body main details[open] .note{display:block}
+section>h2{cursor:pointer;margin:0}
+section:not(.closed)>h2{margin-bottom:12px}
+section>h2::after{content:"▾";margin-left:auto;color:var(--sub);font-size:14px}
+section.closed>h2::after{content:"▸"}
+section.closed>*:not(h2){display:none}
+.sub{color:var(--sub);font-size:13px}
+.amt span{display:block;color:var(--sub);font-size:13px}
+.amt b{font-size:34px;line-height:1.2}
+.verdict{font-size:24px}
+details>summary{color:#6cc8ff;font-size:14px;margin-top:10px}
+.rg{margin:14px 0}
+.rgh{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;font-size:14px}
+.rgh span{color:var(--sub)} .rgh span b{color:var(--ink);font-size:16px}
+.rgt{position:relative;height:18px;margin-top:6px;background:rgba(255,255,255,.05);border-radius:9px}
+.rgt i{position:absolute;display:block}
+.rw{top:7px;height:4px;background:rgba(53,224,255,.4);border-radius:2px}
+.rb{top:0;height:18px;background:linear-gradient(90deg,var(--acc),var(--go));border-radius:9px;opacity:.85}
+.rm{top:-3px;height:24px;width:4px;margin-left:-2px;background:#fff;border-radius:2px}
+.rc{top:-6px;height:30px;width:2px;margin-left:-1px;background:var(--no)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--sub)}
+.legend i{display:inline-block;width:14px;height:8px;border-radius:4px;margin-right:4px;vertical-align:middle}
+#noteBtn{font-size:13px;padding:4px 10px}
 details summary{cursor:pointer}
 details p{margin:4px 0 2px}
 </style>
@@ -95,28 +120,21 @@ details p{margin:4px 0 2px}
 <svg viewBox="0 0 512 424" aria-label="XRP のシンボル" role="img"><path fill="currentColor" d="M437,0h74L357,152.48c-55.77,55.19-146.19,55.19-202,0L.94,0H75L192,115.83a91.11,91.11,0,0,0,127.91,0Z"/><path fill="currentColor" d="M74.05,424H0L155,270.58c55.77-55.19,146.19-55.19,202,0L512,424H438L320,307.23a91.11,91.11,0,0,0-127.91,0Z"/></svg>
 <div><span>XRP ACCUMULATOR</span><h1>XRP 買い増しの点数</h1></div>
 </div>
-<p class="note">これは指標の状態を見せる道具で、利益を約束するものではありません。買うかどうかは自分で決めてください。</p>
-<p id="status" class="note">データを読み込んでいます…</p>
+<p class="note">指標の状態を見せる道具です。利益を約束するものではありません。</p>
+<div class="row"><span id="status" class="note">データを読み込んでいます…</span><button id="noteBtn" type="button">説明を表示</button></div>
 </header>
 <main>
-<section id="how"><h2>この道具の見方（3つの順番）</h2>
-<div class="steps">
-<div><b>STEP 1</b><strong>将来性は保たれているか</strong>リップル社の動きと、XRPL の利用の伸びを点にします。</div>
-<div><b>STEP 2</b><strong>その将来性に対して安いか</strong>利用の大きさと過去の値段に比べて、今の値段を点にします。</div>
-<div><b>STEP 3</b><strong>大口は集めているか</strong>取引所と大口の口座の残高の増減を点にします。</div>
-</div>
-<p class="note">3つを合わせた総合点で「いくら買うか」、過去の成績が良かった合図で「今が買う時か」を見ます。相場の勢いは小さくしか見ません。</p></section>
 <section id="sig"></section>
 <section id="now"></section>
-<section id="detail"></section>
-<section id="fm"></section>
-<section id="hold"></section>
 <section id="road"></section>
-<section id="test"></section>
-<section id="conf"></section>
-<section id="ref"></section>
-<section id="file"></section>
-<section id="src"></section>
+<section id="hold"></section>
+<section id="fm" class="closed"></section>
+<section id="detail" class="closed"></section>
+<section id="test" class="closed"></section>
+<section id="conf" class="closed"></section>
+<section id="ref" class="closed"></section>
+<section id="file" class="closed"></section>
+<section id="src" class="closed"></section>
 </main>
 <footer>XRP のシンボルは、コミュニティが作った XRP の印を使っています。この道具はリップル社や XRP の公式のものではありません。注文や送金の機能はありません。API の鍵や個人情報は使いません。記録はこの端末のブラウザの中だけに保存します。</footer>
 <script>
@@ -333,34 +351,34 @@ function renderAll(){
  const gs={p:total(S,i,'p'),f:total(S,i,'f'),w:total(S,i,'w'),t:total(S,i,'t')};
  let b=band(s),down=false;if(b&&gs.f!=null&&gs.f<cfg.minF){down=true;b=b==='strong'?'ok':'skip'}
  const cls={strong:'go',ok:'okc',skip:'no'}[b]||'';
- const msg={strong:'買い増してよい状態です（強い）',ok:'予定の額なら買ってよい状態です（ふつう）',skip:'今は見送りです'}[b]||'点数を出せません（データ不足）';
+ const msg={strong:'強い：多めに買う',ok:'ふつう：予定額で買う',skip:'見送り'}[b]||'点数を出せません';
  const amt=b?cfg.budget*mult(b):null;
  const row=(k,range)=>{const g=bt?bt.bands[k]:null;return `<tr class="${b===k?'cur':''}"><td>${range}　${BN[k]}${b===k?'　← 今ここ':''}</td><td>予定額 × ${num(mult(k),2)} ＝ ${yen(cfg.budget*mult(k))}</td><td>${g?num(g.days/bt.total*100,0)+'%':'—'}</td><td>${g&&g.up!=null?num(g.up,0)+'%':'—'}</td><td>${g&&g.med!=null?num(g.med,2)+'倍':'—'}</td></tr>`};
  const sg=bt?signals(S,bt.start):[],main=sg.find(x=>x.k==='rsiw'),pc=v=>v==null?'—':num(v,0)+'%';
  const sgRow=x=>`<tr class="${x.on?'cur':''}"><td>${x.name}${x.k==='rsiw'?'　★合図':''}</td><td>${x.base?'—':x.on?'<b class="go">あてはまる</b>':'あてはまらない'}${x.base||x.cur==null?'':'（今 '+num(x.cur,x.d)+'）'}</td><td>${pc(x.y1.win)}</td><td>${pc(x.y1.early)} / ${pc(x.y1.late)}</td><td>${x.y1.worst==null?'—':num(x.y1.worst,2)+'倍'}</td><td>${pc(x.y2.win)}</td><td>${x.y1.n}日・${x.y1.ep}回</td></tr>`;
  $('sig').innerHTML=main?`<h2>買い増しの合図</h2>
  <div class="pill ${main.on?'on':'off'}">${main.on?'合図が出ています':'合図は出ていません'}</div>
- <p>合図の条件：<b>週足 RSI が ${cfg.sigTh} 以下</b>（今 ${num(main.cur,1)}）</p>
- <div class="kv"><div><span>1年後に値段が上だった割合</span><b>${pc(main.y1.win)}</b><div class="bar"><i style="width:${main.y1.win||0}%"></i></div></div>
- <div><span>2年後に値段が上だった割合</span><b>${pc(main.y2.win)}</b><div class="bar"><i style="width:${main.y2.win||0}%"></i></div></div>
- <div><span>いつ買っても（比べる相手・1年後）</span><b>${pc(sg[0].y1.win)}</b><div class="bar"><i style="width:${sg[0].y1.win||0}%"></i></div></div></div>
- <p>過去にこの条件の日に買った場合、値段が上だった割合は、1年後 <b>${pc(main.y1.win)}</b>、2年後 <b>${pc(main.y2.win)}</b> でした（${main.y1.n}日、別々の時期で ${main.y1.ep}回。1年後でいちばん悪かった例は ${main.y1.worst==null?'—':num(main.y1.worst,2)+'倍'}）。</p>
+ <div class="sub" style="margin-top:6px">週足 RSI ${num(main.cur,1)}（${cfg.sigTh} 以下で合図）</div>
+ <div class="kv"><div><span>合図の日に買う → 1年後に上</span><b>${pc(main.y1.win)}</b><div class="bar"><i style="width:${main.y1.win||0}%"></i></div></div>
+ <div><span>合図の日に買う → 2年後に上</span><b>${pc(main.y2.win)}</b><div class="bar"><i style="width:${main.y2.win||0}%"></i></div></div>
+ <div><span>いつ買っても → 1年後に上</span><b>${pc(sg[0].y1.win)}</b><div class="bar"><i style="width:${sg[0].y1.win||0}%"></i></div></div></div>
+ <details><summary>条件と過去の成績をくわしく見る</summary><p>過去にこの条件の日に買った場合、値段が上だった割合は、1年後 <b>${pc(main.y1.win)}</b>、2年後 <b>${pc(main.y2.win)}</b> でした（${main.y1.n}日、別々の時期で ${main.y1.ep}回。1年後でいちばん悪かった例は ${main.y1.worst==null?'—':num(main.y1.worst,2)+'倍'}）。</p>
  <p class="note">これは過去（${dstr(S.ts[bt.start])}〜、bitbank の XRP/円）に起きた割合で、これからの確率ではありません。XRP の大きな上げ下げは数回しかなく、条件は過去に合わせて選んでいるので、これからは下がることがあります。手数料・税金は入っていません。</p>
  <h3>ほかの条件との比べ</h3>
  <div class="wrap"><table><tr><th>条件</th><th>今</th><th>1年後に上だった割合</th><th>うち 2021年まで / 2022年から</th><th>1年後でいちばん悪かった例</th><th>2年後に上だった割合</th><th>数えた日数・時期の数</th></tr>${sg.map(sgRow).join('')}</table></div>
- <p class="note">合図にしたのは、1年後の割合が70%以上で、前半と後半のどちらでも60%以上、別々の時期が10回以上あった条件です。ほかの条件は、どちらかの期間で50%を下回っています。合図の数字は「設定」で変えられます。</p>`:'<h2>買い増しの合図</h2><p>データが足りません。</p>';
+ <p class="note">合図にしたのは、1年後の割合が70%以上で、前半と後半のどちらでも60%以上、別々の時期が10回以上あった条件です。ほかの条件は、どちらかの期間で50%を下回っています。合図の数字は「設定」で変えられます。</p></details>`:'<h2>買い増しの合図</h2><p>データが足りません。</p>';
  $('now').innerHTML=`<h2>総合点と買う額の目安</h2>
  <div class="big"><svg class="ring ${cls}" viewBox="0 0 136 136" role="img" aria-label="総合点 ${s==null?'なし':num(s,0)+'点'}"><circle cx="68" cy="68" r="56" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="10"/><circle cx="68" cy="68" r="56" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(s||0)/100*351.9} 351.9" transform="rotate(-90 68 68)"/><text x="68" y="76" text-anchor="middle" font-size="42" font-weight="700" fill="currentColor">${s==null?'—':num(s,0)}</text><text x="68" y="98" text-anchor="middle" font-size="13" fill="#93a4b8">点 / 100</text></svg>
  <div><div class="verdict ${cls}">${msg}</div>
- <div>今月買う額の目安：<b>${amt==null?'—':yen(amt)}</b>（毎月の予定額 ${yen(cfg.budget)} × ${b?num(mult(b),2):'—'}）</div>
- <div class="note">XRP の値段：${num(price,3)}円（bitbank・${dstr(S.ts[i])} の日足）</div></div></div>
+ <div class="amt"><span>今月買う額の目安</span><b>${amt==null?'—':yen(amt)}</b></div>
+ <div class="sub">XRP${num(price,3)}円（bitbank・${dstr(S.ts[i])} の日足）</div></div></div>
  ${down?`<p class="bad">将来性の点（${num(gs.f,0)}点）が下限の ${cfg.minF}点より低いので、判定を1段下げています。</p>`:''}
- <div class="kv">${GO.map(g=>`<div><span>${GN[g]}</span><b>${gs[g]==null?'—':num(gs[g],0)+' 点'}</b><span>${GH[g]}</span><div class="bar"><i style="width:${gs[g]||0}%"></i></div></div>`).join('')}</div>
+ <div class="kv">${GO.map(g=>`<div><span>${{f:'将来性',p:'値段の安さ',w:'大口の動き',t:'売られすぎ'}[g]}</span><b>${gs[g]==null?'—':num(gs[g],0)+' 点'}</b><div class="bar"><i style="width:${gs[g]||0}%"></i></div></div>`).join('')}</div>
  <p class="note">考え方：相場の勢い（トレンド）ではなく、「将来の価値に対して今の値段が安いか」を見ます。将来性の点が保たれていて、値段が安い時に総合点が高くなります。相場の過熱の指標は重みを小さくしています。</p>
- <h3>点数と行動の決まり（自分で決めた基準）</h3>
+ <details><summary>点数と買う額の決まりを見る</summary>
  <div class="wrap"><table><tr><th>総合点</th><th>買う額</th><th>過去にこの点数だった日の割合</th><th>1年後に値段が上だった割合</th><th>1年後の値段（真ん中の値）</th></tr>
  ${row('strong',cfg.strong+'点以上')}${row('ok',cfg.ok+'〜'+(cfg.strong-1)+'点')}${row('skip',cfg.ok+'点未満')}</table></div>
- <p class="note">右の3つは過去（${bt?dstr(S.ts[bt.start]):'—'}〜）の結果で、値段の指標（安さと過熱）の点だけで数えています（将来性と大口は過去の数字がそろわないため）。これからも同じになるとは限りません。しきい値・倍率・予定額は「設定」で変えられます。</p>`;
+ <p class="note">右の3つは過去（${bt?dstr(S.ts[bt.start]):'—'}〜）の結果で、値段の指標（安さと過熱）の点だけで数えています（将来性と大口は過去の数字がそろわないため）。これからも同じになるとは限りません。しきい値・倍率・予定額は「設定」で変えられます。</p></details>`;
 
  let sw=0;for(const d of cfg.inds){if(d.w>0&&sc(S.ind[d.k][i],d)!=null)sw+=d.w}
  const line=d=>{const v=S.ind[d.k][i],p=sc(v,d);return `<tr><td><details><summary>${d.n}</summary><p class="note">${HELP[d.k]||''}</p></details></td><td>${v==null?'取れていません':num(v,d.d)+d.u}</td><td>${p==null?'—':num(p,0)}</td><td><div class="bar"><i style="width:${p==null?0:p}%"></i></div></td><td>${d.w}</td><td>${p==null||!sw||!(d.w>0)?'—':num(d.w*p/sw,1)}</td></tr>`};
@@ -418,28 +436,30 @@ function simulate(g){   // g＝値段の年の伸び（%）。毎月の予定額
 function renderRoad(){
  const S=state.S,bt=state.bt;if(!S||!$('road'))return;const p=state.price;
  const sc3=[['弱気',plan.bear,'no'],['中立',plan.base,'okc'],['強気',plan.bull,'go']].map(([n,g,c])=>({n,g,c,r:simulate(g)}));
- const when=m=>{if(m==null)return plan.years+'年では届かない';const d=new Date();d.setMonth(d.getMonth()+m);return d.getFullYear()+'年'+(d.getMonth()+1)+'月ごろ（'+(m<12?m+'か月後':num(m/12,1)+'年後')+'）'};
+ const when=m=>{if(m==null)return plan.years+'年では届かない';const d=new Date();d.setMonth(d.getMonth()+m);return d.getFullYear()+'年'+(d.getMonth()+1)+'月ごろに届く'};
  const ys=sc3[1].r.rows.map(x=>x.y).filter(y=>y<=3||y%5===0||y===plan.years||(plan.years<=10&&y%2===1));
  // 過去の値動きの幅
- let range='';if(bt){const st=bt.start,pct=(a,q)=>a[Math.min(a.length-1,Math.floor(a.length*q))];
-  range=[1,2,3].map(y=>{const a=[];for(let i=st;i+365*y<S.n;i++)a.push(S.c[i+365*y]/S.c[i]);a.sort((x,z)=>x-z);if(a.length<100)return '';
-   return `<tr><td>${y}年後</td>${[.1,.25,.5,.75,.9].map(q=>`<td>${num(p*pct(a,q),0)}円<br><span class="note">${num(pct(a,q),2)}倍</span></td>`).join('')}</tr>`}).join('')}
+ let range='';if(bt){const st=bt.start,pct=(a,q)=>a[Math.min(a.length-1,Math.floor(a.length*q))],R=[];
+  for(const y of[1,2,3]){const a=[];for(let i=st;i+365*y<S.n;i++)a.push(S.c[i+365*y]/S.c[i]);a.sort((x,z)=>x-z);if(a.length>=100)R.push({y,v:[.1,.25,.5,.75,.9].map(q=>p*pct(a,q))})}
+  if(R.length){const lo=Math.log(Math.min(p,...R.map(r=>r.v[0]))*0.9),hi=Math.log(Math.max(p,...R.map(r=>r.v[4]))*1.1),X=v=>(Math.log(v)-lo)/(hi-lo)*100;
+   range=R.map(r=>`<div class="rg"><div class="rgh"><b>${r.y}年後</b><span>真ん中 <b>${num(r.v[2],0)}円</b>（${num(r.v[0],0)}〜${num(r.v[4],0)}円）</span></div><div class="rgt"><i class="rw" style="left:${X(r.v[0])}%;width:${X(r.v[4])-X(r.v[0])}%"></i><i class="rb" style="left:${X(r.v[1])}%;width:${X(r.v[3])-X(r.v[1])}%"></i><i class="rm" style="left:${X(r.v[2])}%"></i><i class="rc" style="left:${X(p)}%"></i></div></div>`).join('')}}
  const today0=today(),ev=(plan.events||[]).slice().sort((a,b)=>a.d<b.d?-1:1);
  $('road').innerHTML=`<h2>今後の予測とロードマップ</h2>
- <h3>目標までの道のり</h3>
- <div class="grid">
+ <h3>目標の利息 月 ${yen(plan.goal)} までの道のり（${plan.years}年後）</h3>
+ <details><summary>目標・年数・値段の伸びを変える</summary><div class="grid">
  <label>目標の利息（月・円）<input type="number" step="1000" min="0" data-p="goal" value="${plan.goal}"></label>
  <label>見る年数<input type="number" step="1" min="1" max="30" data-p="years" value="${plan.years}"></label>
  <label>値段の年の伸び：弱気（%）<input type="number" step="any" data-p="bear" value="${plan.bear}"></label>
  <label>値段の年の伸び：中立（%）<input type="number" step="any" data-p="base" value="${plan.base}"></label>
  <label>値段の年の伸び：強気（%）<input type="number" step="any" data-p="bull" value="${plan.bull}"></label>
- <label>利息の扱い<select data-p="reinvest"><option value="1" ${plan.reinvest?'selected':''}>XRP のまま足して貸す</option><option value="0" ${plan.reinvest?'':'selected'}>受け取って使う</option></select></label></div>
- <div class="kv">${sc3.map(s=>{const l=s.r.rows[s.r.rows.length-1];return `<div><span>${s.n}（年 ${s.g>=0?'+':''}${num(s.g,0)}%）・${plan.years}年後</span><b class="${s.c}">${yen(l.val)}</b><span>保有 ${num(l.q,0)} XRP／利息 月 ${yen(l.inc)}</span><span><br>目標 月 ${yen(plan.goal)}：${when(s.r.reach)}</span></div>`}).join('')}</div>
- <div class="wrap" style="margin-top:10px"><table><tr><th>年後</th>${sc3.map(s=>`<th>${s.n} 資産額</th><th>${s.n} 利息（月）</th>`).join('')}</tr>
+ <label>利息の扱い<select data-p="reinvest"><option value="1" ${plan.reinvest?'selected':''}>XRP のまま足して貸す</option><option value="0" ${plan.reinvest?'':'selected'}>受け取って使う</option></select></label></div></details>
+ <div class="kv">${sc3.map(s=>{const l=s.r.rows[s.r.rows.length-1],pr=plan.goal>0?Math.min(100,l.inc/plan.goal*100):0;return `<div><span>${s.n}（年 ${s.g>=0?'+':''}${num(s.g,0)}%）</span><b class="${s.c}">${yen(l.val)}</b><span>利息 月 ${yen(l.inc)}</span><div class="bar"><i style="width:${pr}%"></i></div><span>目標：${when(s.r.reach)}</span></div>`}).join('')}</div>
+ <details><summary>年ごとの表を見る</summary><div class="wrap" style="margin-top:10px"><table><tr><th>年後</th>${sc3.map(s=>`<th>${s.n} 資産額</th><th>${s.n} 利息（月）</th>`).join('')}</tr>
  ${ys.map(y=>`<tr><td>${y}年後</td>${sc3.map(s=>{const x=s.r.rows[y-1];return `<td>${yen(x.val)}</td><td>${yen(x.inc)}</td>`}).join('')}</tr>`).join('')}</table></div>
- <p class="note">前提：今の保有数から始めて、毎月 ${yen(cfg.budget)}（設定の予定額）を買い続け、利率 年 ${num(+hold.rate||0,1)}%・貸し出す割合 ${num(+hold.share||0,0)}% で貸した場合の計算です。${plan.years}年で買う額の合計は ${yen(sc3[1].r.spent)}。値段の伸びは自分で置く前提で、当たるとは限りません。</p>
- <h3>過去の値動きの幅を、今の値段（${num(p,1)}円）に当てた場合</h3>
- <div class="wrap"><table><tr><th>期間</th><th>悪い方（下から10%）</th><th>やや悪い（25%）</th><th>真ん中</th><th>やや良い（75%）</th><th>良い方（上から10%）</th></tr>${range||'<tr><td colspan="6">データが足りません</td></tr>'}</table></div>
+ <p class="note">前提：今の保有数から始めて、毎月 ${yen(cfg.budget)}（設定の予定額）を買い続け、利率 年 ${num(+hold.rate||0,1)}%・貸し出す割合 ${num(+hold.share||0,0)}% で貸した場合の計算です。${plan.years}年で買う額の合計は ${yen(sc3[1].r.spent)}。値段の伸びは自分で置く前提で、当たるとは限りません。</p></details>
+ <h3>1〜3年後の値段の目安（過去の値動きの幅から）</h3>
+ ${range||'<p>データが足りません</p>'}
+ <div class="legend"><span><i style="background:var(--no);width:3px;height:14px"></i>今の値段</span><span><i style="background:#fff;width:4px;height:14px"></i>真ん中</span><span><i style="background:linear-gradient(90deg,var(--acc),var(--go))"></i>よくあった幅（半分の日がこの中）</span><span><i style="background:rgba(53,224,255,.4);height:4px"></i>ほぼ全部の幅</span></div>
  <p class="note">2018年から今までの毎日について、その日から1〜3年後に値段が何倍になったかを並べ、その幅を今の値段に掛けた数字です。過去と同じ幅で動いた場合の目安です。</p>
  <h3>これからの予定（自分で入れる）</h3>
  <div class="row"><input type="date" id="evDate" value="${today0}"><input type="text" id="evText" placeholder="例：ETF の審査の期限" maxlength="60" style="max-width:260px"><button class="main" id="evAdd">予定を足す</button></div>
@@ -505,7 +525,7 @@ function renderRef(){
  ${wh?`<div class="wrap"><table><tr><th>グループ</th><th>数えた口座</th><th>${esc(wh.then)} ごろ</th><th>今</th><th>増減</th></tr>
  ${wrow('取引所などの名前が付いた口座（残高の上位30）',wh.exch)}${wrow('名前のない大口の口座（残高の上位30）',wh.whale)}</table></div>
  <p class="note">XRPScan の残高の一覧（上位1万口座）から、リップル社と創業者の口座を除いて選び、XRPL の台帳で約30日前の残高と比べています。今の上位の口座で比べるので、大口は増えた方に出やすいです。名前のない口座には、取引所の口座が混じっていることがあります。機関投資家かどうかは分かりません。</p>`:'<p>大口のデータは取れていません。</p>'}
- <h2 style="margin-top:18px">参考の数字（点数には入れていません）</h2>
+ <h3 style="margin-top:18px">参考の数字（点数には入れていません）</h3>
  <div class="kv">
  <div><span>XRPL の取引数（${cur?esc(ks[ks.length-1]):'—'}）</span><b>${cur?num(cur.tx,0):'—'}</b><span>${diff('tx')}</span></div>
  <div><span>うち支払いの数</span><b>${cur?num(cur.pay,0):'—'}</b><span>${diff('pay')}</span></div>
@@ -541,7 +561,11 @@ document.addEventListener('change',e=>{const t=e.target;
    if(j.cfg){set('cfg',j.cfg);cfg=loadCfg()}if(j.hold){hold=j.hold;if(!Array.isArray(hold.buys))hold.buys=[];set('hold',hold)}if(typeof j.memo==='string'){memo=j.memo;set('memo',memo)}if(j.plan&&typeof j.plan==='object'){plan=Object.assign({},PLAN0);for(const k of['goal','years','bear','base','bull','reinvest'])if(isFinite(j.plan[k]))plan[k]=Number(j.plan[k]);plan.events=Array.isArray(j.plan.events)?j.plan.events.map(x=>({id:String(x.id),d:String(x.d),t:String(x.t)})):[];set('plan',plan)}if(j.fm&&j.fm.v){fm={v:j.fm.v,at:String(j.fm.at||'')};set('fm',fm)}if(j.snaps&&typeof j.snaps==='object'){snaps=j.snaps;set('snaps',snaps)}
    renderAll();$('fileMsg').textContent='読み込みました（'+(j.exported||'')+' に書き出したファイル）'}catch(err){$('fileMsg').textContent='読み込めません：'+err.message}};fr.readAsText(t.files[0])}
 });
+function noteMode(on){document.body.classList.toggle('notes',on);$('noteBtn').textContent=on?'説明を隠す':'説明を表示'}
+noteMode(get('notes',false));
 document.addEventListener('click',async e=>{const t=e.target;
+ if(t.id==='noteBtn'){const on=!document.body.classList.contains('notes');set('notes',on);noteMode(on);return}
+ if(t.tagName==='H2'&&t.parentElement.tagName==='SECTION'){t.parentElement.classList.toggle('closed');if(t.parentElement.id==='test')drawChart();return}
  if(t.id==='bAdd'){const q=parseFloat($('bQty').value),p=parseFloat($('bPrice').value);if(!(q>0)||!(p>0)){alert('数量と買値を入れてください');return}
   hold.buys.push({d:$('bDate').value||today(),q,p,m:$('bMemo').value.slice(0,60)});hold.buys.sort((a,b)=>a.d<b.d?-1:1);set('hold',hold);renderHold();renderRoad()}
  else if(t.dataset.del!=null){if(confirm('この記録を消しますか？')){hold.buys.splice(+t.dataset.del,1);set('hold',hold);renderHold();renderRoad()}}
