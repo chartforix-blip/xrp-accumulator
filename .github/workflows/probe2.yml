@@ -1,0 +1,22 @@
+name: probe2
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  models: read
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    steps:
+      - name: raw
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > req.json <<'EOF'
+          {"model":"openai/gpt-4o-mini","messages":[{"role":"user","content":"Reply with only this JSON object: {\"a\":1}"}],"max_tokens":50}
+          EOF
+          curl -sS -m 60 -D headers.txt -o body.txt -H "Authorization: Bearer $GH_TOKEN" -H "Content-Type: application/json" -H "Accept: application/json" https://models.github.ai/inference/chat/completions -d @req.json || echo curl-failed
+          echo "---H"; head -c 700 headers.txt | tr -d '\r'
+          echo "---B"; head -c 900 body.txt | cat -v; echo
+          echo "---size"; wc -c body.txt
+          python3 -c "import json;d=json.load(open('body.txt'));print('KEYS',list(d.keys()) if isinstance(d,dict) else type(d));print('CONTENT',repr(d['choices'][0]['message']['content'])[:200] if isinstance(d,dict) and 'choices' in d else 'no choices')" || echo py-failed
