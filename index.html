@@ -113,6 +113,32 @@ details>summary{color:#6cc8ff;font-size:14px;margin-top:10px}
 .chip{font-size:12px;padding:2px 9px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
 .tc ul{margin:4px 0;padding-left:18px;font-size:13px}
 .tc details p{margin:6px 0;font-size:14px}
+/* タブ式の画面と動き */
+body{padding-bottom:86px}
+main>section{display:none}
+body[data-tab=home] main>section[data-tab=home],body[data-tab=news] main>section[data-tab=news],body[data-tab=fore] main>section[data-tab=fore],body[data-tab=asset] main>section[data-tab=asset],body[data-tab=more] main>section[data-tab=more]{display:block;animation:fadeup .35s ease}
+body:not([data-tab=more]) footer{display:none}
+#tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom));background:rgba(8,13,24,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+#tabs button{flex:1;max-width:120px;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:0;color:var(--sub);font-size:11px;padding:6px 2px;border-radius:12px}
+#tabs svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+#tabs span{pointer-events:none}
+#tabs button.on{color:var(--acc);background:rgba(53,224,255,.1)}
+#tabs button.on svg{filter:drop-shadow(0 0 6px rgba(53,224,255,.8))}
+@keyframes fadeup{from{opacity:0;transform:translateY(10px)}}
+@keyframes grow{from{transform:scaleX(0)}}
+@keyframes ringin{from{stroke-dasharray:0 351.9}}
+.bar i{transform-origin:left;animation:grow .9s cubic-bezier(.2,.8,.2,1)}
+.ring circle:nth-of-type(2){animation:ringin 1.1s cubic-bezier(.2,.8,.2,1)}
+.stg i.on,.stg i.nx{transform-origin:left;animation:grow .7s ease}
+.nc{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:10px 0;background:rgba(255,255,255,.035)}
+.nc h4{margin:6px 0 8px;font-size:16px;line-height:1.5}
+.nc .chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.nc dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 10px;font-size:14px}
+.nc dt{color:var(--acc);font-size:12px;white-space:nowrap;padding-top:2px}
+.nc dd{margin:0}
+.bd{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.bd span{padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--sub);font-size:13px}
+.bd span.got{color:#04121a;background:linear-gradient(90deg,var(--acc),var(--go));border:0;font-weight:700;box-shadow:0 0 14px rgba(39,217,163,.4)}
 .stg{display:flex;gap:4px;margin:6px 0}
 .stg i{flex:1;height:9px;border-radius:5px;background:rgba(255,255,255,.09)}
 .stg i.on{background:linear-gradient(90deg,var(--acc),var(--go))}
@@ -135,19 +161,28 @@ details p{margin:4px 0 2px}
 <div class="row"><span id="status" class="sub">データを読み込んでいます…</span><button id="noteBtn" type="button">説明を表示</button></div>
 </header>
 <main>
-<section id="sig"></section>
-<section id="now"></section>
-<section id="biz"></section>
-<section id="road"></section>
-<section id="hold"></section>
-<section id="fm" class="closed"></section>
-<section id="detail" class="closed"></section>
-<section id="test" class="closed"></section>
-<section id="conf" class="closed"></section>
-<section id="ref" class="closed"></section>
-<section id="file" class="closed"></section>
-<section id="src" class="closed"></section>
+<section id="sig" data-tab="home"></section>
+<section id="now" data-tab="home"></section>
+<section id="nhome" data-tab="home"></section>
+<section id="news" data-tab="news"></section>
+<section id="biz" data-tab="fore"></section>
+<section id="road" data-tab="fore"></section>
+<section id="hold" data-tab="asset"></section>
+<section id="fm" class="closed" data-tab="more"></section>
+<section id="detail" class="closed" data-tab="more"></section>
+<section id="test" class="closed" data-tab="more"></section>
+<section id="conf" class="closed" data-tab="more"></section>
+<section id="ref" class="closed" data-tab="more"></section>
+<section id="file" class="closed" data-tab="more"></section>
+<section id="src" class="closed" data-tab="more"></section>
 </main>
+<nav id="tabs">
+<button data-go="home"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>ホーム</span></button>
+<button data-go="news"><svg viewBox="0 0 24 24"><path d="M4 4h13v16H5a1 1 0 0 1-1-1zM17 8h3v11a1 1 0 0 1-1 1h-2M7 8h7M7 12h7M7 16h4"/></svg><span>動向</span></button>
+<button data-go="fore"><svg viewBox="0 0 24 24"><path d="M3 20h18M5 16l4-5 4 3 6-8M19 6v4M19 6h-4"/></svg><span>予測</span></button>
+<button data-go="asset"><svg viewBox="0 0 24 24"><path d="M3 7h18v12H3zM3 11h18M16 15h2"/></svg><span>資産</span></button>
+<button data-go="more"><svg viewBox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg><span>その他</span></button>
+</nav>
 <footer>XRP のシンボルは、コミュニティが作った XRP の印を使っています。この道具はリップル社や XRP の公式のものではありません。注文や送金の機能はありません。API の鍵や個人情報は使いません。記録はこの端末のブラウザの中だけに保存します。</footer>
 <script>
 'use strict';
@@ -671,7 +706,7 @@ function renderAll(){
  ${GO.map(g=>`<tr><td colspan="6"><b>${GN[g]}：${gs[g]==null?'—':num(gs[g],0)+' 点'}</b></td></tr>`+cfg.inds.filter(d=>d.g===g).map(line).join('')).join('')}
  <tr><td><b>総合点</b></td><td></td><td></td><td></td><td>${sw}</td><td><b>${s==null?'—':num(s,1)}</b></td></tr></table></div>
  <p class="note">点数は「0点の値」から「100点の値」までをまっすぐ結んで出します。取れていない指標は外し、残りの重みで計算します。</p>`;
- renderBiz2();renderFm();renderHold();renderRoad();renderTest();renderConf();renderRef();renderFile();renderSrc();
+ renderBiz2();renderNews();renderFm();renderHold();renderRoad();renderTest();renderConf();renderRef();renderFile();renderSrc();
 }
 function renderBiz(){
  const B=state.biz;if(!B||!$('biz'))return;const am=state.am||[];
@@ -713,6 +748,39 @@ function renderBiz(){
  ${pend.length?pend.map(a=>`<div class="cmp"><span>${AN[a.n]}　${a.c} / ${a.t} 票</span><div class="bar"><i style="width:${Math.min(100,a.c/a.t*100)}%"></i></div></div>`).join(''):'<p class="sub">投票中の機能のデータがありません</p>'}
  <p class="note">発表は、リップル社のサイトの発表ページの一覧から、題名の言葉でテーマに分けています。新しい30本とその前の30本を比べ、裏付けの数字がある時は半分ずつで点にします。事業の勢いは、XRP への結びつきの強さで重みを付けた平均です。発表の一覧：${esc((state.src['リップル社の公式発表の一覧']||{}).msg||'')}</p>`;
 }
+/* ---------- 最新の動向（リップル社の公式発表）と解説 ---------- */
+const TN={bank:'銀行免許・許可',pay:'決済・送金',multi:'マルチチェーン',inst:'機関投資家・担保',rwa:'トークン化',rlusd:'RLUSD',ai:'AI エージェント',xrp:'XRP・XRPL',other:'その他'};
+function newsCard(n){
+ const led=state.biz&&state.biz.led?state.biz.led.find(t=>t.k===n.th):null,up=led&&n.st>led.s;
+ const title=n.ai&&n.ja?esc(n.ja):esc(n.s.replace(/-/g,' ').replace(/^./,c=>c.toUpperCase()));
+ return `<div class="nc"><div class="chips"><span class="sub">${esc(n.d||'日付なし')}</span>${n.ai?`<span class="chip okc">${TN[n.th]||'その他'}</span>${n.st?`<span class="chip ${n.st>=4?'go':n.st===3?'okc':'no'}">段階${n.st}：${STN[n.st]}</span>`:''}<span class="chip ${n.xm?'go':'no'}">${n.xm?'本文に XRP あり':'XRP の記載なし'}</span>${up?'<span class="chip go">段階が進んだ可能性</span>':''}`:'<span class="chip no">解説はまだ</span>'}</div>
+ <h4>${title}</h4>
+ ${n.ai?`<dl><dt>何が起きた</dt><dd>${esc(n.what)}</dd><dt>今後の影響</dt><dd>${esc(n.impact)}</dd><dt>XRP への効き方</dt><dd>${esc(n.xrp)}</dd></dl>`:''}
+ <div class="sub" style="margin-top:8px"><a href="https://ripple.com/ripple-press/${esc(n.s)}/" target="_blank" rel="noopener">公式の原文を読む</a></div></div>`}
+/* AI を使わない解説：題名の言葉からテーマと段階を決め、決めてある文を当てる */
+const R_WHAT=['','リップル社が、この分野の計画・方針を発表しました。','提携または申請の発表です。稼働や数字は、まだ出ていません。','許可・契約・買収が成立したという発表です。事業を始める土台ができました。','サービスの開始・拡大の発表です。実際に使える状態になりました。','数字（売上・処理額・残高など）を公表した発表です。'];
+const R_IMP={bank:'免許や許可がある国では、銀行や機関投資家が取引の相手にしやすくなります。決済と預かりの市場を取る土台です。次は、開業や預かり額の数字が出るかを見ます。',
+ pay:'企業間の送金の市場に関わります。ステーブルコインを使う分は、今 約2,260億ドルで、2030年に 5,000億〜1兆ドルの予測があります。取り分が広がるかを見ます。',
+ rlusd:'ステーブルコインの市場の中で、RLUSD の割合を上げる動きです。市場と RLUSD の発行額は「予測」のタブで毎日更新しています。',
+ inst:'機関投資家の預かり・担保・売買の市場に関わります。担保に XRP が使われるようになると、預けられて動かない XRP が増えます。',
+ rwa:'資産のトークン化の市場に関わります。今 約388億ドルで、2030年に 1〜4兆ドルの予測があります。試験から本番に進むかを見ます。',
+ multi:'ほかのチェーンでの利用を広げる動きです。ブリッジの市場は頭打ちの傾向があるので、預けられた XRP の量が増えるかを見ます。',
+ ai:'AI が自動で支払う市場は、今はとても小さく、伸びの幅が大きい分野です。実際の支払いの量が公表されるかを見ます。',
+ xrp:'XRPL と XRP そのものの機能・利用に関わる動きです。XRP の需要に、いちばん直接つながります。',
+ other:'事業の市場への影響は小さい発表です（社会貢献・人事・拠点など）。'};
+function ruleNews(s,d){
+ const th=/water|charit|donat|pledge|nonprofit|appoint|board-of|presence|office|hub|accelerator|university|scam/.test(s)?'other':/rlusd|ripple-usd|rippleusd|stablecoin/.test(s)?'rlusd':/tokeni[sz]|real-world-asset|money-market|mmf|treasur(y-bills|ies)|government-bond|liquidity-fund|private-credit|capital-markets/.test(s)?'rwa':/occ|trust-bank|licen[sc]e|mica|emi-|fca|permissions|approval|vasp|charter|dfsa|adgm/.test(s)?'bank':/custody|prime|collateral|institution|brokerage|derivatives|perpetual|brevan|clearing|staking/.test(s)?'inst':/payment|cross-border|remittance|treasury|trade-finance|settlement/.test(s)?'pay':/bridge|evm|cross-chain|multichain|wormhole|axelar|chainlink|hyperliquid/.test(s)?'multi':/(^|-)ai(-|$)|agent/.test(s)?'ai':/xrp/.test(s)?'xrp':'other';
+ const st=/reports|surpass|milestone|record|billion|million/.test(s)?5:/launch|introduc|live|available|expands|rolls-out|integrat|opens/.test(s)?4:/receives|secures|approval|licen[sc]e|granted|acquires|completes|closes/.test(s)?3:/partner|collaborat|joins|plans|seeks|applies|selects/.test(s)?2:1;
+ const xm=/xrp/.test(s),L=LEDGER.find(t=>t.k===th);
+ return {s,d,ai:true,rule:true,ja:'',th,st:th==='other'?0:st,xm,what:th==='other'?'事業の中心ではない分野の発表です。':R_WHAT[st],impact:R_IMP[th],xrp:(xm?'題名に XRP・XRPL が出ています。':'題名には XRP・XRPL が出ていません。')+(L?L.lt:'')}}
+function renderNews(){
+ const dm=new Map((state.news||[]).map(n=>[n.s,n]));
+ const N=(state.press||PRESS0).filter(x=>!/-(ja|ko|kr|pt)$/.test(x.s)).slice(0,40).map(x=>{const a=dm.get(x.s);return a&&a.ai?a:ruleNews(x.s,x.d||(a&&a.d)||'')});
+ const note='<p class="sub">リップル社の公式の発表を、新しい順に並べています。題名は英語の原題です。解説は、題名の言葉からテーマと段階を決めて、決めてある文を当てたものです（AI は使っていません）。細かい中身は、原文で確かめてください。</p>';
+ if($('nhome'))$('nhome').innerHTML=`<h2>最新の動向</h2>${N.length?N.filter(n=>n.th!=='other').slice(0,3).map(newsCard).join('')+'<div class="row"><button class="main" data-go="news">動向をもっと見る</button></div>':'<p class="sub">動向のデータがまだありません。</p>'}`;
+ if($('news'))$('news').innerHTML=`<h2>リップル社と XRP の最新の動向</h2>${note}${N.length?N.slice(0,40).map(newsCard).join(''):'<p class="sub">動向のデータがまだありません。毎朝、新しい発表を取り込みます。</p>'}`;
+}
+function go(tab){document.body.dataset.tab=tab;document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.go===tab));set('tab',tab);window.scrollTo(0,0);if(tab==='more')setTimeout(drawChart,50)}
 function renderFm(){
  const old=fm.at?Math.floor((Date.now()-new Date(fm.at).getTime())/864e5):null;
  $('fm').innerHTML=`<h2>リップル社と XRP の材料を点にする（自分で付ける）</h2>
@@ -744,6 +812,11 @@ function renderHold(){
  <div><span>買った額との差</span><b class="${val-cost<0?'bad':''}">${q?yen(val-cost):'—'}</b></div>
  <div><span>利息の見込み（年）</span><b>${num(ix,2)} XRP</b><span>今の値段で ${yen(ix*p)}</span></div>
  <div><span>利息の見込み（月）</span><b>${num(ix/12,2)} XRP</b><span>今の値段で ${yen(ix*p/12)}</span></div></div>
+ <h3>保有数の目標</h3>
+ ${(()=>{const MS=[100,500,1000,5000,10000,50000,100000,500000],nx=MS.find(m=>q<m),pv=[0].concat(MS).filter(m=>m<=q).pop(),pg=nx?(q-pv)/(nx-pv)*100:100;
+  return `<div class="bd">${MS.map(m=>`<span class="${q>=m?'got':''}">${m>=10000?m/10000+'万':num(m,0)} XRP</span>`).join('')}</div>
+  <div class="cmp"><span>${nx?'次の目標 '+num(nx,0)+' XRP まで、あと '+num(nx-q,0)+' XRP':'全部の目標に届きました'}</span><div class="bar"><i style="width:${pg}%"></i></div></div>
+  <div class="cmp"><span>利息の目標 月 ${yen(plan.goal)} まで：今 月 ${yen(ix*p/12)}</span><div class="bar"><i style="width:${plan.goal>0?Math.min(100,ix*p/12/plan.goal*100):0}%"></i></div></div>`})()}
  <p class="note">利息は「保有数 × 貸し出す割合 × 利率」の単純な計算です。税金・手数料・利率の変更・貸し出し先のリスクは入っていません。</p>
  <h3>買い増しの記録</h3>
  <div class="row"><input type="date" id="bDate" value="${today()}"><input type="number" id="bQty" step="any" min="0" placeholder="数量 XRP"><input type="number" id="bPrice" step="any" min="0" placeholder="買値 円" value="${p?p.toFixed(3):''}"><input type="text" id="bMemo" placeholder="メモ" maxlength="60"><button class="main" id="bAdd">記録する</button></div>
@@ -892,7 +965,9 @@ document.addEventListener('change',e=>{const t=e.target;
 });
 function noteMode(on){document.body.classList.toggle('notes',on);$('noteBtn').textContent=on?'説明を隠す':'説明を表示'}
 noteMode(get('notes',false));
+go(['home','news','fore','asset','more'].includes(get('tab','home'))?get('tab','home'):'home');
 document.addEventListener('click',async e=>{const t=e.target;
+ if(t.dataset.go){go(t.dataset.go);return}
  if(t.id==='retry'){state.src={};load();return}
  if(t.id==='noteBtn'){const on=!document.body.classList.contains('notes');set('notes',on);noteMode(on);return}
  if(t.tagName==='H2'&&t.parentElement.tagName==='SECTION'){t.parentElement.classList.toggle('closed');if(t.parentElement.id==='test')drawChart();return}
@@ -906,7 +981,7 @@ document.addEventListener('click',async e=>{const t=e.target;
  else if(t.id==='exp'){const data={app:'xrp-accumulator',version:1,exported:new Date().toISOString(),cfg,hold,memo,fm,plan,snaps};
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,1)],{type:'application/json'}));a.download='xrp-accumulator-'+today()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$('fileMsg').textContent='書き出しました：'+a.download}
  else if(t.id==='reload'){const last=get('reloadAt',0);if(Date.now()-last<600e3){$('reloadMsg').textContent='取り直しは10分に1回までです';return}
-  set('reloadAt',Date.now());const y=new Date().getUTCFullYear();for(const k of['c.xrp_jpy.'+y,'c.btc_jpy.'+y,'fng','fund','xs','cg','ltvl','lstb','ldex','rl','fl','stAll','defi','am','press','mkj','cg2'])   /* world（配信のためた分）は消さない */{try{localStorage.removeItem(LS+k)}catch(e){}delete mem[k]}state.src={};load()}
+  set('reloadAt',Date.now());const y=new Date().getUTCFullYear();for(const k of['c.xrp_jpy.'+y,'c.btc_jpy.'+y,'fng','fund','xs','cg','ltvl','lstb','ldex','rl','fl','stAll','defi','am','press','mkj','cg2','newsj'])   /* world（配信のためた分）は消さない */{try{localStorage.removeItem(LS+k)}catch(e){}delete mem[k]}state.src={};load()}
 });
 let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(drawChart,150)});
 
@@ -936,6 +1011,7 @@ async function load(){
    daily('defi','llama','https://api.llama.fi/v2/historicalChainTvl',j=>ago90(j.map(d=>[d.date,d.tvl])),'DeFi の市場全体（DefiLlama）'),
    daily('am','xrpscan','https://api.xrpscan.com/api/v1/amendments',j=>j.map(a=>({n:String(a.name),e:!!a.enabled,c:+a.count||0,t:+a.threshold||0,s:!!a.supported,on:a.enabled_on?String(a.enabled_on).slice(0,10):''})),'XRPL の機能の投票（XRPScan）'),
    pressList()]);
+  state.news=await daily('newsj','ghpages','https://chartforix-blip.github.io/xrp-accumulator/data/news.json',j=>(j&&Array.isArray(j.items)?j.items:[]).slice(0,60).map(n=>({s:String(n.s||'').replace(/[^\w-]/g,''),d:String(n.d||'').slice(0,10),ai:!!n.ai,ja:String(n.ja||''),what:String(n.what||''),impact:String(n.impact||''),xrp:String(n.xrp||''),th:String(n.th||'other').replace(/\W/g,''),st:Math.max(0,Math.min(5,Math.round(+n.st||0))),xm:!!n.xm})),'最新の動向と解説（GitHub が毎日作成）');
   const world=await worldFeeds();
   state.mkj=await daily('mkj','ghpages','https://chartforix-blip.github.io/xrp-accumulator/data/markets.json',j=>Array.isArray(j)?j.slice(-800).map(h=>({d:String(h.d),lend:+h.lend||0,rwa:+h.rwa||0,bridge:+h.bridge||0})):[],'市場の数字の毎日の記録（DefiLlama を GitHub が取得）');
   Object.assign(state,{rl,fl,stAll,defi,am,press,world,xt:ago90(ltvl)});
