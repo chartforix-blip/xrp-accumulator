@@ -1,0 +1,21 @@
+name: notify-owner
+on:
+  schedule:
+    - cron: "20 10,22 * * *"
+  workflow_dispatch:
+permissions:
+  issues: write
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: assign new alerts to the owner (GitHub then emails the owner)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          for n in $(gh issue list --state open --limit 30 --json number,assignees --jq '.[] | select((.assignees | length) == 0) | .number'); do
+            gh issue edit "$n" --add-assignee "$OWNER"
+            echo "assigned $n"
+          done
