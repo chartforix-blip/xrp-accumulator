@@ -481,7 +481,7 @@ const LEDGER=[
  {k:'pay',s:5,f:5,l:1,facts:[['累計の処理額 1,000億ドル超・顧客 1,700超（会社の発表）','ripple-redefines-payments-with-end-to-end-stablecoin-platform-and-global-customer-momentum'],['製品の売上が年換算で9億ドルに近づく（会社の発表）','ripple-reports-banner-year-approaching-900m-product-revenue-run-rate-signs-multi-solution-partnerships'],['企業の資金管理（Ripple Treasury）を開始','ripple-treasury-introduces-always-on-corporate-treasury-platform-to-modernize-corporate-cash-management'],['Mastercard・WebBank・Gemini との試験','ripple-teams-up-with-mastercard-webbank-and-gemini']],
   lt:'送金の発表の本文には、XRP を使う量が書かれていません。ステーブルコインと法定通貨で送る分は、XRP を使いません。処理額の通貨別の内わけは公表されていません。',nx:'処理額のうち、XRP を使った分が公表されるか。'},
  {k:'multi',s:4,f:4,l:1,facts:[['RLUSD が XRPL・イーサリアム・Base で使える（Coinbase と提携）','ripple-and-coinbase-partner-to-expand-access-to-rlusd'],['Hyperliquid への対応','ripple-announces-support-for-hyperliquid-expanding-institutional-access-to-onchain-liquidity'],['Wormhole・Axelar とつながっている（公式の記事）',''],['XRPL EVM サイドチェーンに預けられた資産は約2万ドル（DefiLlama）','']],
-  lt:'RLUSD が XRPL の外へ広がる分は、XRP を使いません。ほかのチェーンで XRP が預けられる量（Flare など）は数字が出ていますが、まだ小さいです。',nx:'ほかのチェーンに預けられた XRP の量。XRPL EVM サイドチェーンの利用。'},
+  lt:'RLUSD が XRPL の外へ広がる分は、XRP を使いません。ほかのチェーンで XRP が預けられる量（Flare など）は数字が出ていますが、まだ小さいです。リップル社は今、Wormhole・Axelar など他社の橋を使う側で、XRPL 自前のチェーン間ブリッジの機能は 2026年8月に取り下げを勧めました。',nx:'XRPL を通るチェーン間の額が公表されるか。ほかのチェーンに預けられた XRP の量。XRPL EVM サイドチェーンの利用。'},
  {k:'inst',s:4,f:5,l:2,facts:[['Ripple Prime：規制上の純資本 10億ドル超・社債 2.75億ドル（会社の発表）','ripple-prime-closes-275-million-senior-notes-offering'],['Standard Chartered が RLUSD を預かり、担保に使う計画に参加','standard-chartered-launches-rlusd-custody-and-joins-planned-collateral-integration-with-ripple-and-lmax-group'],['BNY と預かり・貿易金融で協力を拡大','ripple-expands-collaboration-with-bny-across-custody-and-tokenized-trade-finance'],['株のデリバティブの事業を開始','ripple-prime-launches-delta-one-business-expanding-equity-derivatives-capabilities-for-institutional-clients']],
   lt:'発表の本文に出てくる担保は、RLUSD・ファンドの持ち分・トークン化した MMF が中心です。XRP については、Ripple Prime の製品ページに「RLUSD・XRP・トークン化した資産を差し入れる」とあり、2025-11 の発表に「XRP の担保つきの貸し付けに拡大中」とあります。量と掛け目は公表されていません。',nx:'担保に入った XRP の量が公表されるか。Standard Chartered・LMAX の担保の利用が始まるか。'},
  {k:'rwa',s:3,f:4,l:1,facts:[['ブラジルの証券保管機関 CSD BR が XRPL を使う','csdbr-and-ripple-use-the-xrpl-blockchain-to-expand-brazils-financial-market-infrastructure'],['DBS・Franklin Templeton：トークン化 MMF と RLUSD の売買・貸し借り','dbs-franklin-templeton-to-launch-trading-and-lending-solutions-tokenised-mmf-ripple-stablecoin-rlusd'],['韓国で国債の決済の試み（教保生命）','ripple-and-kyobo-life-insurance-partner-to-pioneer-korea-s-first-tokenised-government-bond-settlement-on-blockchain'],['Aviva Investors がファンドを XRPL でトークン化','aviva-investors-expands-its-tokenised-offering-with-the-launch-of-a-sterling-liquidity-fund-tokenised-share-class']],
@@ -501,15 +501,15 @@ const MK=[
  {k:'rwa',n:'資産のトークン化',unit:'残高',m0:388,g:[30,70,125],r0:6.6,sh:[1,2.5,5],x:100,kind:'bal',type:'伸びる見込み。ただし予測と今の差が大きい',tc:'okc',src:'今 約388億ドル。McKinsey の予測は 2030年に 1〜4兆ドル（今の25〜100倍）。XRPL の割合 約1.7% は二次情報で、時点がずれている。'},
  {k:'tms',n:'企業の資金管理のソフト',unit:'年の売上',m0:59,g:[8,10,13.5],r0:null,sh:[2,3,5],x:0,kind:'rev',type:'年々大きくなる（ゆるやか）',tc:'go',src:'今 約56〜62億ドル、2030年に 91〜120億ドルの予測。Ripple Treasury の売上は非公開で、取り分は仮定。ここは XRPL を通らない。'},
  {k:'agent',n:'AI エージェントの支払い',unit:'年の取扱高',m0:3,g:[50,150,300],r0:null,sh:[1,5,10],x:50,kind:'flow',type:'今はとても小さい。伸びの幅が大きい',tc:'okc',src:'今 約3億ドル（x402 の年換算、推定）。「2030年に 1,900億〜1兆ドル」という予測は、AI が関わる買い物の額で、定義が別。リップル社の量は不明で、取り分は仮定。'},
- {k:'bridge',n:'ブリッジ・マルチチェーン',unit:'預けられた残高',m0:220,g:[-10,0,15],r0:2.5,sh:[null,2,4],x:100,kind:'bal',type:'調べ直し中',tc:'okc',src:'今の数字は「ブリッジに置かれた残高」（約220億ドル）で、複数のチェーンをつなぐ仕組みがどれだけ使われているか（動いた額）を表していません。前は「頭打ち」と書いていましたが、根拠は、1つのブリッジの残高の減少と流出事故だけで、足りませんでした。技術の仕様とリップル社の計画、動いた額の数字を調べ直しています（2026-11-23）。リップル側は Flare と Axelar の残高。'},
+ {k:'bridge',n:'チェーンをつなぐ仕組み（マルチチェーン）',unit:'チェーン間で動いた額・年',m0:2200,g:[10,25,40],r0:null,sh:[0.2,1,3],x:100,kind:'flow',type:'年々大きくなる',tc:'go',src:'測り方を「ブリッジに置かれた残高」から「チェーン間で動いた額」に直した（2026-11-23）。今の約2,200億ドルは概算：Circle の CCTP が月 約150〜170億ドル（累計3,000億ドル超）、Wormhole が2025年に176億ドル（どちらも報道）。全体の統計は見つかっていない。調査会社の予測は年 24〜28% の伸び。BIS の年次報告2026は、相互運用をお金の「つなぎ」と書いている。ブリッジの残高が減ったのは、残高を置かない方式（焼いて発行する型）へ変わった面が大きい。XRPL を通るチェーン間の額は公表されていないので、リップル側の取り分は仮定。手がかりは Flare に預けられた XRP 約1.5億 XRP と、XRPL EVM サイドチェーンの残高 約2.6万ドル（報道）で、今はとても小さい。'},
  {k:'col',n:'XRP を担保にする（預けられて動かない XRP）',unit:'機関などが持つ XRP の額・推定',m0:15.6,g:[0,20,40],r0:0.69,sh:[null,10,25],x:100,kind:'col',type:'公式は「拡大中」。量は非公表',tc:'okc',src:'市場は、ETF と上場会社が持つ XRP（推定 約17億 XRP）。取り分は、そのうち担保に回る割合。今の数字は、Flare で貸し借りの担保に入っている約0.75億 XRP（FXRP 約1.45億のうち約52%、報道経由）。確かめられた事実：Ripple Prime の製品ページに「RLUSD・XRP・トークン化した資産を差し入れる」とあり、2025-11 の発表に「XRP の担保つきの貸し付けに拡大中」とある。量と掛け目は非公表。XRPL の今のレンディングの仕様（XLS-66）は担保なしで、XRP は貸す資産と金庫の資産にはなれるが、借り手の担保にはなれない。担保つきの機能は「将来の版で目指す」という発言だけで、時期は出ていない。5年後の割合（中立 10%・強気 25%）は見通しで、実績の裏付けはない。'},
  {k:'lend',n:'チェーンの上の貸し借り',unit:'預け入れ残高',m0:520,g:[-10,5,20],r0:0,sh:[0,0.5,2],x:100,kind:'bal',type:'この1年は縮んだ',tc:'no',src:'約920億ドル（2025-10）から約520億ドル（2026-09）へ約43%減った。XRPL のレンディングは投票中で、まだ有効でない。'}];
 const oku=v=>'<span class="nw">'+(v==null||!isFinite(v)?'—':v>=10000?num(v/10000,2)+'兆ドル':v>=100?num(v,0)+'億ドル':v>=1?num(v,1)+'億ドル':num(v*100,0)+'百万ドル')+'</span>';
 function mkCalc(){
  const st=state,ov=cfg.mk||{},liq=isFinite(cfg.liq)?cfg.liq:5,via=isFinite(cfg.via)?cfg.via:20,turn=isFinite(cfg.turn)&&cfg.turn>0?cfg.turn:365;
- const live={stable:{m0:st.stAll?st.stAll.now/1e8:null,r0:st.rl?st.rl.now/1e8:null,x:st.rl&&st.rl.now?st.rl.xrpl/st.rl.now*100:null},bridge:{r0:st.fl?st.fl.now/1e8+1.2:null},col:st.cg&&st.cg.usd?{m0:17*st.cg.usd,r0:0.75*st.cg.usd}:{}};
+ const live={stable:{m0:st.stAll?st.stAll.now/1e8:null,r0:st.rl?st.rl.now/1e8:null,x:st.rl&&st.rl.now?st.rl.xrpl/st.rl.now*100:null},col:st.cg&&st.cg.usd?{m0:17*st.cg.usd,r0:0.75*st.cg.usd}:{}};
  // 毎日の記録（DefiLlama の分野ごとの残高）を、調べた日からの伸びの目盛りとして使う
- const H=st.mkj||[],idx=k=>H.length>1&&H[0][k]>0&&H[H.length-1][k]>0?H[H.length-1][k]/H[0][k]:1,IK={lend:'lend',rwa:'rwa',bridge:'bridge'};
+ const H=st.mkj||[],idx=k=>H.length>1&&H[0][k]>0&&H[H.length-1][k]>0?H[H.length-1][k]/H[0][k]:1,IK={lend:'lend',rwa:'rwa'};
  let need=0,lm=0,ln=0;
  const rows=MK.map(d=>{const L=live[d.k]||{},u=ov[d.k]||{},ix=IK[d.k]?idx(IK[d.k]):1,m0=(L.m0||d.m0)*ix,r0=L.r0!=null?L.r0:d.r0,g=d.g.slice(),sh=d.sh.slice();
   if(isFinite(u.g))g[1]=+u.g;if(isFinite(u.sh))sh[1]=+u.sh;const x=isFinite(u.x)?+u.x:(L.x!=null?L.x:d.x);
@@ -525,7 +525,7 @@ function mkCalc(){
 function mkHtml(M){
  const xs=state.xsx||{};
  return `<h3>市場規模の予測（リップル社の動きが、5年でどれだけの市場になるか）</h3>
- <div class="kv"><div><span>リップル社の市場の伸び（中立・5年）</span><b class="go">${M.gm==null?'—':num(M.gm,1)+' 倍'}</b><span>今の数字が出ている市場（ステーブルコイン・トークン化・ブリッジ・担保）の平均</span></div>
+ <div class="kv"><div><span>リップル社の市場の伸び（中立・5年）</span><b class="go">${M.gm==null?'—':num(M.gm,1)+' 倍'}</b><span>今の数字が出ている市場（ステーブルコイン・トークン化・担保）の平均</span></div>
  <div><span>5年後に XRP で要る額（中立）</span><b>${oku(M.need)}</b><span>${M.needX?'今の値段で 約'+num(M.needX/1e8,1)+'億 XRP'+(M.pct!=null?'（流通量の '+num(M.pct,2)+'%）':''):'XRP のドルの値段が取れていません'}</span></div>
  <div><span>今、XRPL で実際に使われている XRP</span><b>${xs.amm!=null?num(xs.amm/1e4,0)+'万 XRP':'—'}</b><span>流動性の池の中。1日の焼却 ${xs.fee!=null?num(xs.fee,0)+' XRP':'—'}</span></div></div>
  <div class="tcs">${M.rows.map(r=>{const mx=Math.max(r.y5[2].R,1e-9);return `<div class="tc"><div class="tch"><b>${r.n}</b><span class="chip ${r.tc}">${r.type}</span><span class="chip ${r.auto?'go':'no'}">${r.auto?'毎日更新':'手で置いた数字'}</span></div>
@@ -550,6 +550,19 @@ function mkHtml(M){
  <p><b>お知らせが届くもの</b>：買い増しの合図が出た時・消えた時、リップル社の新しい発表が出た時（GitHub からメール）。</p>
  <p><b>自動では変わらないもの</b>：市場の伸び率の予測（低・中立・高）と5年後の取り分、テーマの段階、機関が持つ XRP の量（推定 約17億）、XRP の必要量の3つの前提。新しい発表のお知らせが来たら、段階と前提を見直してください。予測の出どころ（調査会社の数字）は、数か月に1回、調べ直す必要があります。</p></details>
  <p class="note">市場の今の規模と予測は、2026-11-22 に調べた数字で、多くは報道やまとめを通した二次情報です。取り分が「仮定」の市場は、リップル社が年の数字を公表していない市場です。単位が市場ごとに違う（残高・取扱高・売上）ので、市場どうしを足してはいません。</p>`}
+/* ---------- 考え方の5段（AI×金融×経済 → ブロックチェーン → チェーンをつなぐ → XRPL）と、今の裏付け。2026-11-23 調べ ---------- */
+const THESIS=[
+ {n:'AI が自分で支払い・取引をするようになる',c:'okc',s:'始まったばかり',f:'Visa・Mastercard・Google（AP2）・Stripe・Coinbase（x402）が、AI が支払う仕組みを出しています。金額はまだ小さく、x402 は年換算で約3億ドル（推定）です。',w:'AI の支払いの件数と金額'},
+ {n:'今の金融の仕組みでは対応しきれない',c:'no',s:'裏付けが見つからない',f:'Visa と Mastercard は、今のカードの仕組みにトークンを足して、AI の決済に対応すると発表しています。BIS・IMF などが「今の仕組みでは足りず、ブロックチェーンが要る」と書いた公式の文は、見つかりませんでした。',w:'カード会社・銀行の AI 決済が、少額・24時間・自動に対応できるか'},
+ {n:'そこでブロックチェーンと暗号資産が使われる',c:'go',s:'数字が出ている',f:'ステーブルコインの残高は増えています（下の市場の数字）。AI の支払い（x402）は、Solana（約7割）と Base が中心です。XRPL も対応チェーンで、XRP か RLUSD で払えますが、使われた量の数字はありません。',w:'ステーブルコインの残高、x402 のチェーン別の割合'},
+ {n:'複数のチェーンをつなぐ仕組みが必要になる',c:'go',s:'確かめられた',f:'BIS の年次報告2026は、相互運用をお金の「つなぎ」と書いています。Circle の CCTP は累計3,000億ドル超、月 約150〜170億ドルが動いています（報道）。調査会社の予測は年 24〜28% の伸びです。',w:'チェーン間で動いた額'},
+ {n:'その中心を XRPL が担う',c:'no',s:'裏付けが見つからない',f:'リップル社が始めた Interledger（ILP）には、インターネットの TCP/IP になぞらえた公式の説明があります。ただし、ILP は XRP・XRPL を必須にしていません。リップル社の資料に「XRPL がつなぐ中心になる」という文言は見つからず、今は Wormhole・Axelar など他社の橋を使う側です。XRPL 自前のチェーン間ブリッジの機能（XChainBridge）は、2026年8月にリップル社が取り下げを勧めました。Swift・Chainlink・BIS の計画に、XRPL の記載は見つかりませんでした。社長は「支払いの未来はマルチチェーンで、相互運用される」と発言しています（報道）。',w:'XRPL を通るチェーン間の額、ほかのチェーンに預けられた XRP の量、リップル社の相互運用の発表'}];
+function thesisHtml(){
+ return `<h3>考え方の5段と、今の裏付け</h3>
+ <div class="sub">「AI×金融×経済を結ぶにはブロックチェーンが要り、それをまとめるのが XRPL」という考え方を、5つの段に分けて、公式の資料で確かめた結果です。</div>
+ ${THESIS.map((t,i)=>`<div class="tc" style="margin-top:8px"><div class="tch"><b><span class="go" style="margin-right:6px">${i+1}</span>${t.n}</b><span class="chip ${t.c}">${t.s}</span></div>
+ <details><summary>根拠と、次に見る数字</summary><p>${t.f}</p><p><b>次に見る数字</b>：${t.w}</p></details></div>`).join('')}
+ <p class="sub" style="margin-top:8px">段1〜4は「市場が大きくなるか」、段5は「その中で XRPL が取れるか」です。段4までは裏付けが出てきていますが、段5は、今の公式の資料では確かめられていません。調べた日：2026-11-23。数字の多くは報道からです。</p>`}
 function analyze2(S){
  const B=analyze(S),o=cfg.led||{};
  const led=LEDGER.map(t=>{const u=o[t.k]||{},s=isFinite(u.s)?+u.s:t.s,f=Math.max(s,isFinite(u.f)?+u.f:t.f),l=isFinite(u.l)?+u.l:t.l,old=B.th.find(x=>x.k===t.k)||{};
@@ -582,6 +595,7 @@ function renderBiz2(){
  <div class="kv"><div><span>今の設定</span><b id="lwPct">${B.linkW}%</b></div>
  <div><span>事業の分析の点</span><b id="lwBiz" class="go">${num(B.score,0)}</b></div>
  <div><span>総合点（指を離すと反映）</span><b id="lwTot">${state.total==null?'—':num(state.total,0)}</b></div></div></div>
+ ${thesisHtml()}
  ${mkHtml(B.mkt)}
  <h3>許可・契約がどの段階まで進んだか（市場を取る土台）</h3>
  <div class="tcs">${B.led.map(t=>`<div class="tc"><div class="tch"><b>${t.n}</b><span class="chip ${t.l>=3?'go':t.l===2?'okc':'no'}">${LKS[t.l]}</span></div>
