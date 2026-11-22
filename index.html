@@ -752,11 +752,65 @@ function renderBiz(){
 const TN={bank:'銀行免許・許可',pay:'決済・送金',multi:'マルチチェーン',inst:'機関投資家・担保',rwa:'トークン化',rlusd:'RLUSD',ai:'AI エージェント',xrp:'XRP・XRPL',other:'その他'};
 function newsCard(n){
  const led=state.biz&&state.biz.led?state.biz.led.find(t=>t.k===n.th):null,up=led&&n.st>led.s;
- const title=n.ai&&n.ja?esc(n.ja):esc(n.s.replace(/-/g,' ').replace(/^./,c=>c.toUpperCase()));
+ const ja=n.ja||JA[n.s]||'',en=esc(n.s.replace(/-/g,' ').replace(/^./,c=>c.toUpperCase()));
+ const title=ja?esc(ja):`【${TN[n.th]||'その他'}】${R_HEAD[n.st||0]}<br><span class="sub" style="font-weight:400">日本語の題名はまだありません。原題：${en}</span>`;
  return `<div class="nc"><div class="chips"><span class="sub">${esc(n.d||'日付なし')}</span>${n.ai?`<span class="chip okc">${TN[n.th]||'その他'}</span>${n.st?`<span class="chip ${n.st>=4?'go':n.st===3?'okc':'no'}">段階${n.st}：${STN[n.st]}</span>`:''}<span class="chip ${n.xm?'go':'no'}">${n.xm?'本文に XRP あり':'XRP の記載なし'}</span>${up?'<span class="chip go">段階が進んだ可能性</span>':''}`:'<span class="chip no">解説はまだ</span>'}</div>
  <h4>${title}</h4>
  ${n.ai?`<dl><dt>何が起きた</dt><dd>${esc(n.what)}</dd><dt>今後の影響</dt><dd>${esc(n.impact)}</dd><dt>XRP への効き方</dt><dd>${esc(n.xrp)}</dd></dl>`:''}
  <div class="sub" style="margin-top:8px"><a href="https://ripple.com/ripple-press/${esc(n.s)}/" target="_blank" rel="noopener">公式の原文を読む</a></div></div>`}
+/* 発表の題名の日本語（2026-11-22 に訳して入れた分。新しい発表は、下の決まった見出しが付く） */
+const JA={
+'ripple-and-waterorg-deepen-partnership-to-drive-global-access-to-safe-water':'リップルと Water.org、安全な水を世界に届ける提携を深める',
+'ripple-reports-banner-year-approaching-900m-product-revenue-run-rate-signs-multi-solution-partnerships':'リップル、好調な1年を報告：製品の売上が年換算で9億ドルに近づく',
+'ripple-expands-collaboration-with-bny-across-custody-and-tokenized-trade-finance':'リップル、BNY との協力を拡大：預かりと、トークン化した貿易金融',
+'ripple-and-coinbase-partner-to-expand-access-to-rlusd':'リップルと Coinbase、RLUSD を使える場を広げる提携',
+'c2fo-and-ripple-partner-to-modernize-trade-finance-using-the-xrp-ledger':'C2FO とリップル、XRP Ledger で貿易金融を新しくする提携',
+'ripple-and-robinhood-partner-to-power-the-next-generation-of-finance':'リップルと Robinhood、次の世代の金融に向けて提携',
+'ripple-receives-final-occ-approval-to-establish-national-trust-bank':'リップル、米国の信託銀行の設立について OCC の最終承認を取得',
+'ripple-treasury-introduces-always-on-corporate-treasury-platform-to-modernize-corporate-cash-management':'Ripple Treasury、24時間動く企業の資金管理の仕組みを発表',
+'aviva-investors-expands-its-tokenised-offering-with-the-launch-of-a-sterling-liquidity-fund-tokenised-share-class':'Aviva Investors、ポンド建ての流動性ファンドのトークン化を開始',
+'ripple-launches-support-for-institutions-to-access-real-world-asset-perpetual-swaps':'リップル、機関投資家向けに実物資産の無期限先物の取り扱いを開始',
+'drivewealth-and-ripple-partner-to-bring-institutional-digital-asset-infrastructure-to-global-investing':'DriveWealth とリップル、機関向けのデジタル資産の基盤で提携',
+'ripple-and-meritz-securities-partner-to-bring-institutional-custody-and-tokenization-to-korea-s-capital-markets':'リップルとメリッツ証券、韓国の資本市場で預かりとトークン化の提携',
+'standard-chartered-launches-rlusd-custody-and-joins-planned-collateral-integration-with-ripple-and-lmax-group':'Standard Chartered、RLUSD の預かりを開始：リップル・LMAX との担保の連携の計画に参加',
+'ripple-and-brevan-howard-deepen-relationship':'リップルと Brevan Howard、関係を深める',
+'csdbr-and-ripple-use-the-xrpl-blockchain-to-expand-brazils-financial-market-infrastructure':'CSD BR とリップル、XRPL でブラジルの金融市場の基盤を広げる',
+'ripple-treasury-brings-industry-s-first-governed-ai-for-enterprise-treasury':'Ripple Treasury、企業の資金管理に、管理された AI を導入',
+'ripple-prime-launches-delta-one-business-expanding-equity-derivatives-capabilities-for-institutional-clients':'Ripple Prime、株のデリバティブ（デルタワン）の事業を開始',
+'ripple-and-jeonbuk-bank-partner-to-modernize-cross-border-payments-for-korea-s-regional-banking-sector':'リップルと全北銀行、韓国の地方銀行の国際送金を新しくする提携',
+'ripple-prime-closes-275-million-senior-notes-offering':'Ripple Prime、2.75億ドルの社債の発行を完了',
+'ripple-strengthens-digital-capital-markets-infrastructure-with-investments-in-zilo-and-licuido':'リップル、Zilo と Licuido に出資：デジタルの資本市場の基盤を強化',
+'ripple-receives-full-eu-mica-casp-license':'リップル、EU の MiCA の正式な免許を取得',
+'ripple-and-sbi-group-partner-to-launch-ripple-usd-in-japan':'リップルと SBI グループ、日本で RLUSD を始める提携',
+'ripple-secures-preliminary-MiCA-CASP-license':'リップル、EU の MiCA の仮の免許を取得',
+'ripple-and-bitso-expand-partnership':'リップルと Bitso、提携を拡大',
+'ripple-expands-washington-dc-presence':'リップル、ワシントン DC の拠点を拡大',
+'new-partnerships-bring-rlusd-to-turkiye':'新しい提携で、RLUSD がトルコへ',
+'ripple-prime-partners-with-edx-to-bridge-institutional-access-to-digital-asset-liquidity':'Ripple Prime、EDX と提携：機関投資家がデジタル資産の流動性を使いやすく',
+'ripple-prime-secures-usd200-million-debt-facility-from-neuberger-specialty-finance-to-expand-capacity':'Ripple Prime、Neuberger から2億ドルの借入枠を確保',
+'ripple-reinforces-commitment-to-the-middle-east-with-expanded-presence-in-the-uae':'リップル、UAE の拠点を拡大して中東への取り組みを強化',
+'ripple-partners-with-kbank-to-deploy-scalable-digital-asset-wallet-infrastructure-through-ripple-custody':'リップル、KBank と提携：Ripple Custody でデジタル資産のウォレットの基盤を提供',
+'ripple-and-kyobo-life-insurance-partner-to-pioneer-korea-s-first-tokenised-government-bond-settlement-on-blockchain':'リップルと教保生命、韓国で初めての、トークン化した国債の決済に取り組む',
+'ripple-treasury-launches-the-first-treasury-management-system-tms-with-native-digital-asset-capabilities':'Ripple Treasury、デジタル資産に対応した資金管理システムを開始',
+'ripple-joins-monetary-authority-of-singapore-s-bloom-initiative-and-partners-with-unloq-to-advance-programmable-settlement-infrastructure-in-trade-finance':'リップル、シンガポール金融管理局の BLOOM に参加：貿易金融の決済の基盤で Unloq と提携',
+'ripple-deepens-commitment-to-brazil-with-expanded-payments-offering-growing-customer-momentum-and-vasp-license-application':'リップル、ブラジルで決済を拡大し、VASP の免許を申請',
+'ripple-to-secure-australian-financial-services-license-expanding-payments-offering-across-apac':'リップル、オーストラリアの金融サービス免許を取得へ：アジア太平洋で決済を拡大',
+'ripple-redefines-payments-with-end-to-end-stablecoin-platform-and-global-customer-momentum':'リップル、ステーブルコインで送金を一貫して扱う仕組みを発表：顧客が世界で増加',
+'aviva-investors-seeks-to-tokenise-products-on-the-xrp-ledger-in-collaboration-with-ripple':'Aviva Investors、リップルと協力して XRP Ledger で商品のトークン化を目指す',
+'ripple-accelerates-institutional-custody-adoption-with-security-compliance-and-staking-capabilities':'リップル、機関向けの預かりを強化：セキュリティ・法令対応・ステーキングの機能',
+'ripple-announces-support-for-hyperliquid-expanding-institutional-access-to-onchain-liquidity':'リップル、Hyperliquid に対応：機関投資家がチェーン上の流動性を使えるように',
+'ripple-receives-full-eu-electronic-money-institution-license-in-luxembourg':'リップル、ルクセンブルクで EU の電子マネー機関の正式な免許を取得',
+'ripple-expands-european-regulatory-footprint-with-preliminary-emi-approval-in-luxembourg':'リップル、ルクセンブルクで電子マネー機関の仮の承認を取得',
+'ripple-receives-fca-permissions-to-scale-ripple-payments-in-the-uk':'リップル、英国 FCA の許可を取得：英国で Ripple Payments を拡大',
+'ripple-expands-partnership-with-tjm-to-enhance-institutional-trade-execution-and-clearing-services':'リップル、TJM との提携を拡大：機関向けの売買の執行と清算を強化',
+'ripple-payments-sees-first-european-bank-adoption-with-amina-bank':'Ripple Payments、欧州の銀行で初めて AMINA Bank が採用',
+'ripple-secures-federal-approval-to-establish-national-trust-bank':'リップル、米国の信託銀行の設立について連邦の承認を取得',
+'tech-against-scams-coalition-launches-scamberry-pie-to-spark-holiday-conversations-about-online-safety':'詐欺対策の団体、ネットの安全を話し合う取り組みを開始',
+'redotpay-integrates-ripple-payments-to-extend-stablecoin-reach-and-launches-send-crypto-receive-ngn':'RedotPay、Ripple Payments を導入：ステーブルコインの送金を拡大',
+'ripple-expands-scope-of-payment-activities-in-singapore-for-its-major-payment-institution-license':'リップル、シンガポールの決済の免許で扱える範囲を拡大',
+'rlusd-recognized-as-accepted-fiat-referenced-token-for-use-within-abu-dhabis-adgm':'RLUSD、アブダビの ADGM で使える通貨連動トークンとして認められる',
+'ripple-teams-up-with-mastercard-webbank-and-gemini':'リップル、Mastercard・WebBank・Gemini と協力'};
+const R_HEAD=['この分野の発表','計画・方針の発表','提携・申請の発表','許可・契約・買収の成立','サービスの開始・拡大','数字の公表'];
 /* AI を使わない解説：題名の言葉からテーマと段階を決め、決めてある文を当てる */
 const R_WHAT=['','リップル社が、この分野の計画・方針を発表しました。','提携または申請の発表です。稼働や数字は、まだ出ていません。','許可・契約・買収が成立したという発表です。事業を始める土台ができました。','サービスの開始・拡大の発表です。実際に使える状態になりました。','数字（売上・処理額・残高など）を公表した発表です。'];
 const R_IMP={bank:'免許や許可がある国では、銀行や機関投資家が取引の相手にしやすくなります。決済と預かりの市場を取る土台です。次は、開業や預かり額の数字が出るかを見ます。',
@@ -775,8 +829,8 @@ function ruleNews(s,d){
  return {s,d,ai:true,rule:true,ja:'',th,st:th==='other'?0:st,xm,what:th==='other'?'事業の中心ではない分野の発表です。':R_WHAT[st],impact:R_IMP[th],xrp:(xm?'題名に XRP・XRPL が出ています。':'題名には XRP・XRPL が出ていません。')+(L?L.lt:'')}}
 function renderNews(){
  const dm=new Map((state.news||[]).map(n=>[n.s,n]));
- const N=(state.press||PRESS0).filter(x=>!/-(ja|ko|kr|pt)$/.test(x.s)).slice(0,40).map(x=>{const a=dm.get(x.s);return a&&a.ai?a:ruleNews(x.s,x.d||(a&&a.d)||'')});
- const note='<p class="sub">リップル社の公式の発表を、新しい順に並べています。題名は英語の原題です。解説は、題名の言葉からテーマと段階を決めて、決めてある文を当てたものです（AI は使っていません）。細かい中身は、原文で確かめてください。</p>';
+ const N=(state.press||PRESS0).filter(x=>!/-(ja|ko|kr|pt)$|^ripple-(reforca|lanca)-/.test(x.s)).slice(0,40).map(x=>{const a=dm.get(x.s);return a&&a.ai?a:ruleNews(x.s,x.d||(a&&a.d)||'')});
+ const note='<p class="sub">リップル社の公式の発表を、新しい順に並べています。題名は日本語に訳したものです（新しく出た発表は、訳が入るまで、テーマと段階の見出しになります）。解説は、題名の言葉からテーマと段階を決めて、決めてある文を当てたものです（AI は使っていません）。細かい中身は、原文で確かめてください。</p>';
  if($('nhome'))$('nhome').innerHTML=`<h2>最新の動向</h2>${N.length?N.filter(n=>n.th!=='other').slice(0,3).map(newsCard).join('')+'<div class="row"><button class="main" data-go="news">動向をもっと見る</button></div>':'<p class="sub">動向のデータがまだありません。</p>'}`;
  if($('news'))$('news').innerHTML=`<h2>リップル社と XRP の最新の動向</h2>${note}${N.length?N.slice(0,40).map(newsCard).join(''):'<p class="sub">動向のデータがまだありません。毎朝、新しい発表を取り込みます。</p>'}`;
 }
