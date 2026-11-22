@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="XRP 点数">
+<title>XRP 買い増しの点数</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#1c2530;--sub:#5b6875;--line:#d9dfe5;--go:#0a7d4b;--ok:#2b6cb0;--no:#8a6d1a;--bad:#b3261e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 "Yu Gothic UI","Hiragino Sans","Noto Sans JP",sans-serif;overflow-wrap:anywhere}
+header,main{max-width:980px;margin:0 auto;padding:0 16px}
+h1{font-size:22px;margin:18px 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+h3{font-size:15px;margin:16px 0 6px}
+p{margin:6px 0}
+.note{color:var(--sub);font-size:14px}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin:14px 0}
+.big{display:flex;flex-wrap:wrap;gap:16px;align-items:center}
+.score{font-size:56px;font-weight:700;line-height:1.1;min-width:120px}
+.score small{font-size:16px;font-weight:400;color:var(--sub)}
+.verdict{font-size:22px;font-weight:700;line-height:1.4}
+.go{color:var(--go)}.okc{color:var(--ok)}.no{color:var(--no)}.bad{color:var(--bad)}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:right;vertical-align:top}
+td{white-space:nowrap}
+th:first-child,td:first-child{text-align:left;min-width:150px;white-space:normal}
+th{color:var(--sub);font-weight:600;white-space:nowrap}
+tr.cur td{background:#eef7f1;font-weight:700}
+input,button,textarea{font:inherit}
+input[type=number],input[type=date],input[type=text]{width:100%;max-width:130px;padding:4px 6px;border:1px solid var(--line);border-radius:6px}
+td input[type=number]{max-width:90px}
+textarea{width:100%;min-height:110px;padding:8px;border:1px solid var(--line);border-radius:6px}
+button{padding:6px 12px;border:1px solid #9aa7b3;border-radius:6px;background:#fff;cursor:pointer}
+button.main{background:#1c2530;color:#fff;border-color:#1c2530}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.grid label{display:block;font-size:14px;color:var(--sub)}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:10px}
+.kv div{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.kv b{display:block;font-size:20px}
+.kv span{font-size:13px;color:var(--sub)}
+.bar{height:8px;background:#e6eaee;border-radius:4px;min-width:80px}
+.bar i{display:block;height:8px;border-radius:4px;background:var(--go)}
+canvas{width:100%;height:260px;display:block}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+a{color:#1a56a0}
+footer{max-width:980px;margin:0 auto;padding:8px 16px 40px;color:var(--sub);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+<h1>XRP 買い増しの点数</h1>
+<p class="note">これは指標の状態を見せる道具で、利益を約束するものではありません。買うかどうかは自分で決めてください。</p>
+<p id="status" class="note">データを読み込んでいます…</p>
+</header>
+<main>
+<section id="sig"></section>
+<section id="now"></section>
+<section id="detail"></section>
+<section id="fm"></section>
+<section id="hold"></section>
+<section id="test"></section>
+<section id="conf"></section>
+<section id="ref"></section>
+<section id="file"></section>
+<section id="src"></section>
+</main>
+<footer>注文や送金の機能はありません。API の鍵や個人情報は使いません。記録はこの端末のブラウザの中だけに保存します。</footer>
+<script>
+'use strict';
+/* ---------- 保存 ---------- */
+const LS='xrpacc.';const mem={};
+function get(k,d){try{const v=localStorage.getItem(LS+k);return v?JSON.parse(v):d}catch(e){return k in mem?mem[k]:d}}
+function set(k,v){mem[k]=v;try{localStorage.setItem(LS+k,JSON.stringify(v));return true}catch(e){return false}}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const yen=v=>v==null||!isFinite(v)?'—':Math.round(v).toLocaleString('ja-JP')+'円';
+const num=(v,d)=>v==null||!isFinite(v)?'—':Number(v).toLocaleString('ja-JP',{minimumFractionDigits:d,maximumFractionDigits:d});
+const dstr=ts=>new Date(ts).toISOString().slice(0,10);
+
+/* ---------- 設定 ---------- */
+const DEF={inds:[
+ {k:'val',g:'p',n:'XRPL の利用の大きさに対する値段（過去の真ん中の値に対する倍率）',u:'倍',w:14,zero:1.5,full:0.5,d:2},
+ {k:'dd',g:'p',n:'過去最高値からの下落率',u:'%',w:8,zero:0,full:70,d:1},
+ {k:'ma',g:'p',n:'200日移動平均に対する倍率',u:'倍',w:8,zero:1.5,full:0.7,d:2},
+ {k:'pos',g:'p',n:'過去4年の値幅の中の位置',u:'%',w:6,zero:100,full:0,d:1},
+ {k:'btc',g:'p',n:'XRP/BTC 比率の200日平均に対する倍率',u:'倍',w:3,zero:1.3,full:0.7,d:2},
+ {k:'rsiw',g:'t',n:'週足 RSI（14）',u:'',w:3,zero:70,full:30,d:1},
+ {k:'fng',g:'t',n:'恐怖と欲の指数',u:'',w:3,zero:75,full:20,d:0},
+ {k:'rsid',g:'t',n:'日足 RSI（14）',u:'',w:2,zero:70,full:30,d:1},
+ {k:'fund',g:'t',n:'資金調達率（直近7日の平均・8時間あたり）',u:'%',w:1,zero:0.03,full:-0.01,d:4},
+ {k:'man',g:'f',n:'リップル社と XRP の材料（自分で付けた点）',u:'点',w:14,zero:0,full:100,d:0},
+ {k:'stb',g:'f',n:'XRPL のステーブルコイン残高（RLUSD など）の90日の増減',u:'%',w:8,zero:-10,full:30,d:1},
+ {k:'tvl',g:'f',n:'XRPL に預けられた資産の90日の増減（XRP の値動きを除く）',u:'%',w:6,zero:-20,full:30,d:1},
+ {k:'dex',g:'f',n:'XRPL の DEX の出来高（直近30日 ÷ その前の90日）',u:'倍',w:4,zero:0.6,full:1.5,d:2},
+ {k:'exch',g:'w',n:'取引所などの口座の残高の30日の増減（減る＝引き出されている）',u:'%',w:10,zero:5,full:-5,d:2},
+ {k:'whale',g:'w',n:'大口の口座の残高の30日の増減（増える＝買い集めている）',u:'%',w:10,zero:-5,full:5,d:2}],
+ strong:70,ok:50,minF:40,sigTh:40,budget:30000,mStrong:2,mOk:1,mSkip:0};
+const GN={f:'将来性（ファンダメンタルズ）',p:'将来性と過去に対する値段の安さ',w:'大口の動き',t:'相場の過熱（短期・重みは小さい）'};
+const GH={f:'高いほど、事業と利用が伸びている',p:'高いほど、今の値段が安い',w:'高いほど、大口が集めている',t:'高いほど、売られすぎ'};
+const GO=['f','p','w','t'];
+const FM=[['etf','ETF・投資商品への資金の出入り'],['reg','規制・法律（米国・日本）'],['biz','リップル社の提携・買収・免許'],['use','RLUSD・送金サービスの利用の広がり'],['risk','裁判・事故などの悪い材料（ない・解決＝良い）']];
+function loadCfg(){const c=get('cfg',null);const d=JSON.parse(JSON.stringify(DEF));if(!c||!Array.isArray(c.inds))return d;
+ for(const i of d.inds){const s=c.inds.find(x=>x.k===i.k);if(s){for(const f of['w','zero','full'])if(isFinite(s[f]))i[f]=Number(s[f]);}}
+ for(const f of['strong','ok','minF','sigTh','budget','mStrong','mOk','mSkip'])if(isFinite(c[f]))d[f]=Number(c[f]);return d}
+let cfg=loadCfg();
+let fm=get('fm',{v:{},at:''});
+const fmScore=()=>{let s=50;for(const [k] of FM)s+=10*(+fm.v[k]||0);return s};
+let hold=get('hold',{baseQty:0,baseAvg:0,rate:3,share:100,buys:[]});
+let memo=get('memo','');
+let snaps=get('snaps',{});   // 日付 -> {tx,pay,act,escrow,supply}
+const state={S:null,src:{},fund:null};
+
+/* ---------- 取得（上限に当たったら止める） ---------- */
+const blocked=get('blocked',{});
+async function getJSON(host,url,body){
+ if(blocked[host]&&blocked[host]>Date.now())throw new Error('上限に当たったので止めています（'+new Date(blocked[host]).toLocaleString('ja-JP')+' まで）');
+ const r=await fetch(url,body?{method:'POST',body:JSON.stringify(body)}:undefined);
+ if(r.status===429||r.status===403){blocked[host]=Date.now()+6*3600e3;set('blocked',blocked);throw new Error('回数の上限（HTTP '+r.status+'）。6時間は呼びません')}
+ if(!r.ok)throw new Error('HTTP '+r.status);
+ return r.json();
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function candles(pair){
+ const now=new Date(),thisY=now.getUTCFullYear(),td=today();let rows=[];
+ for(let y=2017;y<=thisY;y++){
+  const key='c.'+pair+'.'+y;let c=get(key,null);
+  const fresh=c&&(c.full||(c.at&&Date.now()-c.at<600e3));   // 今年の分は10分たったら取り直す
+  if(!fresh){
+   try{
+    const j=await getJSON('bitbank','https://public.bitbank.cc/'+pair+'/candlestick/1day/'+y);
+    if(j.success===1){c={full:y<thisY,day:td,at:Date.now(),rows:j.data.candlestick[0].ohlcv.map(o=>[o[5],+o[1],+o[2],+o[3]])};set(key,c)}
+    else if(j.data&&j.data.code===10009){blocked.bitbank=Date.now()+6*3600e3;set('blocked',blocked);throw new Error('回数の上限（10009）。6時間は呼びません')}
+    else if(!c){c={full:false,day:td,rows:[]}}
+    await sleep(150);
+   }catch(e){if(!c)throw e;state.src['bitbank '+pair]={ok:false,msg:e.message+'。前に取った数字を使っています'}}
+  }
+  rows=rows.concat(c.rows);
+ }
+ if(!state.src['bitbank '+pair])state.src['bitbank '+pair]={ok:true,msg:'最新の日足 '+(rows.length?dstr(rows[rows.length-1][0]):'なし')+'（'+rows.length+'日分）'};
+ return rows;
+}
+async function daily(key,host,url,pick,label){
+ let c=get(key,null);
+ if(!c||c.day!==today()){
+  try{const j=await getJSON(host,url);c={day:today(),at:Date.now(),v:pick(j)};set(key,c)}
+  catch(e){state.src[label]={ok:false,msg:e.message+(c?'。前に取った数字（'+c.day+'）を使っています':'')};return c?c.v:null}
+ }
+ state.src[label]={ok:true,msg:'取得 '+new Date(c.at).toLocaleString('ja-JP')};return c.v;
+}
+
+/* ---------- 大口の動き（XRPScan の残高の一覧と、XRPL の30日前の残高） ---------- */
+async function whales(){
+ const label='大口の動き（XRPScan・xrplcluster）';let c=get('wh',null);
+ if(c&&c.day===today()){state.src[label]={ok:true,msg:'取得 '+new Date(c.at).toLocaleString('ja-JP')};return c}
+ try{
+  const b=await getJSON('xrpscan','https://api.xrpscan.com/api/v1/balances');
+  let escrow=0;const ex=[],wh=[];
+  for(const x of b){if(x.escrow)escrow+=x.escrow;const nm=x.name&&x.name.name?String(x.name.name):'';
+   if(/ripple|chrislarsen|ahbritto|jed/i.test(nm))continue;
+   if(nm){if(ex.length<30)ex.push(x)}else if(wh.length<30)wh.push(x)}
+  const rpc=(m,p)=>getJSON('xrplcluster','https://xrplcluster.com/',{method:m,params:[p]});
+  const cur=await rpc('ledger',{ledger_index:'validated'});
+  const idx=cur.result.ledger_index-Math.round(30*86400/3.95);
+  const old=await rpc('ledger',{ledger_index:idx});
+  const then=old.result.ledger?String(old.result.ledger.close_time_human).slice(0,11):'約30日前';
+  const sumUp=async list=>{let now=0,was=0,n=0,skip=0;
+   for(let k=0;k<list.length;k+=5){const rs=await Promise.all(list.slice(k,k+5).map(x=>rpc('account_info',{account:x.account,ledger_index:idx})));
+    rs.forEach((r,j)=>{const a=r.result&&r.result.account_data;if(a){now+=list[k+j].balance/1e6;was+=a.Balance/1e6;n++}else skip++});await sleep(120)}
+   return {now,was,n,skip,pct:was>0?(now-was)/was*100:null}};
+  c={day:today(),at:Date.now(),then,escrow:escrow/1e6,exch:await sumUp(ex),whale:await sumUp(wh)};set('wh',c);
+  state.src[label]={ok:true,msg:'取得 '+new Date(c.at).toLocaleString('ja-JP')};return c;
+ }catch(e){state.src[label]={ok:false,msg:e.message+(c?'。前に取った数字（'+c.day+'）を使っています':'')};return c}
+}
+
+/* ---------- 指標 ---------- */
+function build(x,btcMap,fngMap,ext){
+ const n=x.length,ts=x.map(r=>r[0]),c=x.map(r=>r[3]),h=x.map(r=>r[1]);
+ const A=()=>new Array(n).fill(null);const ind={dd:A(),ma:A(),rsiw:A(),fng:A(),rsid:A(),pos:A(),btc:A(),fund:A(),man:A(),stb:A(),tvl:A(),dex:A(),exch:A(),whale:A(),val:A()};
+ const D=864e5,stb=ext.stb,tvl=ext.tvl,dex=ext.dex,R=[];
+ for(let i=90;i<n;i++){const t=ts[i];
+  // 利用の大きさ＝ステーブルコイン残高・預けられた資産・DEX の30日平均の出来高 の相乗平均
+  const sv=stb.get(t),tv=tvl.get(t);if(sv&&tv&&dex.has(t)&&dex.has(t-29*D)){let a=0,ok=true;for(let j=0;j<30;j++){const v=dex.get(t-j*D);if(v==null){ok=false;break}a+=v}
+   if(ok&&a>0){const r=c[i]/Math.cbrt(sv*tv*(a/30));R.push(r);if(R.length>=180)ind.val[i]=r/median(R)}}
+  const s1=stb.get(t),s0=stb.get(t-90*D);if(s1&&s0)ind.stb[i]=(s1-s0)/s0*100;
+  const v1=tvl.get(t),v0=tvl.get(t-90*D);if(v1&&v0&&ts[i-90]===t-90*D){const r1=v1/c[i],r0=v0/c[i-90];ind.tvl[i]=(r1-r0)/r0*100}
+  if(dex.has(t)&&dex.has(t-119*D)){let a=0,b=0,ok=true;for(let j=0;j<120;j++){const v=dex.get(t-j*D);if(v==null){ok=false;break}if(j<30)a+=v;else b+=v}if(ok&&b>0)ind.dex[i]=(a/30)/(b/90)}
+ }
+ for(const k of['stb','tvl','dex','val'])if(n>1&&ind[k][n-1]==null)ind[k][n-1]=ind[k][n-2];
+ let ath=0,sum=0;
+ // 日足 RSI
+ let ag=0,al=0;
+ // 週足 RSI
+ let wk=null,lastWk=null,prevClose=null,wg=0,wl=0,wn=0;
+ // BTC 比率
+ const ratio=A();let rs=0,rc=0;const rq=[];let lastF=null;
+ for(let i=0;i<n;i++){
+  ath=Math.max(ath,h[i]);ind.dd[i]=(1-c[i]/ath)*100;
+  sum+=c[i];if(i>=200)sum-=c[i-200];if(i>=199)ind.ma[i]=c[i]/(sum/200);
+  if(i>0){const ch=c[i]-c[i-1],g=Math.max(ch,0),l=Math.max(-ch,0);
+   if(i<=14){ag+=g/14;al+=l/14}else{ag=(ag*13+g)/14;al=(al*13+l)/14}
+   if(i>=14)ind.rsid[i]=al===0?100:100-100/(1+ag/al)}
+  const w=Math.floor((ts[i]/864e5+3)/7);
+  if(wk!==null&&w!==wk){const pc=c[i-1];
+   if(lastWk!==null){const ch=pc-lastWk,g=Math.max(ch,0),l=Math.max(-ch,0);wn++;
+    if(wn<=14){wg+=g/14;wl+=l/14}else{wg=(wg*13+g)/14;wl=(wl*13+l)/14}}
+   lastWk=pc}
+  wk=w;
+  if(wn>=14){const ch=c[i]-lastWk,g=(wg*13+Math.max(ch,0))/14,l=(wl*13+Math.max(-ch,0))/14;ind.rsiw[i]=l===0?100:100-100/(1+g/l)}
+  if(i>=365){let lo=Infinity,hi=0;for(let j=Math.max(0,i-1459);j<=i;j++){if(c[j]<lo)lo=c[j];if(c[j]>hi)hi=c[j]}ind.pos[i]=hi>lo?(c[i]-lo)/(hi-lo)*100:null}
+  const b=btcMap.get(ts[i]);
+  if(b){const r=c[i]/b;rq.push(r);rs+=r;if(rq.length>200)rs-=rq.shift();if(rq.length===200)ind.btc[i]=r/(rs/200)}
+  const f=fngMap.get(ts[i]);if(f!=null)lastF=f;ind.fng[i]=lastF;
+ }
+ return {n,ts,c,ind};
+}
+const sc=(v,i)=>v==null?null:Math.max(0,Math.min(100,(v-i.zero)/(i.full-i.zero)*100));
+function total(S,i,g){let sw=0,ss=0,all=0;for(const d of cfg.inds){if(!(d.w>0)||(g&&!g.includes(d.g)))continue;if(d.k!=='fund'&&d.k!=='val')all+=d.w;const s=sc(S.ind[d.k][i],d);if(s==null)continue;sw+=d.w;ss+=d.w*s}
+ return sw>0&&sw>=all*(g==='pt'?0.6:0.01)?ss/sw:null}
+const band=s=>s==null?null:s>=cfg.strong?'strong':s>=cfg.ok?'ok':'skip';
+const BN={strong:'強い',ok:'ふつう',skip:'見送り'};
+const mult=b=>b==='strong'?cfg.mStrong:b==='ok'?cfg.mOk:cfg.mSkip;
+const median=a=>{if(!a.length)return null;const s=a.slice().sort((p,q)=>p-q),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
+
+/* ---------- 検証 ---------- */
+function backtest(S){
+ const n=S.n,scv=new Array(n).fill(null);let start=-1;
+ const fundSave=S.ind.fund[n-1];S.ind.fund[n-1]=null;   // 検証には資金調達率を入れない
+ for(let i=0;i<n;i++){scv[i]=total(S,i,'pt');if(start<0&&scv[i]!=null&&S.ind.fng[i]!=null&&S.ind.ma[i]!=null)start=i}
+ S.ind.fund[n-1]=fundSave;
+ if(start<0)return null;
+ const mk=()=>({days:0,inv:0,later:[],d1:0});
+ const bands={strong:mk(),ok:mk(),skip:mk()},bins=Array.from({length:10},mk);
+ for(let i=start;i<n;i++){const s=scv[i];if(s==null)continue;
+  for(const g of[bands[band(s)],bins[Math.min(9,Math.floor(s/10))]]){g.days++;g.inv+=1/S.c[i];if(i+365<n){g.later.push(S.c[i+365]/S.c[i])}}}
+ const fin=g=>({days:g.days,avg:g.days?g.days/g.inv:null,n1:g.later.length,up:g.later.length?g.later.filter(r=>r>1).length/g.later.length*100:null,med:median(g.later)});
+ // 毎月1回の買い方の比較
+ let lastM=null;const dca={spent:0,x:0,m:0},rule={spent:0,x:0,m:0,strong:0,ok:0,skip:0};
+ for(let i=start;i<n;i++){const d=new Date(S.ts[i]),m=d.getUTCFullYear()*12+d.getUTCMonth();if(m===lastM)continue;lastM=m;
+  if(scv[i]==null)continue;const b=band(scv[i]);
+  dca.m++;dca.spent+=cfg.budget;dca.x+=cfg.budget/S.c[i];
+  rule.m++;rule[b]++;const y=cfg.budget*mult(b);rule.spent+=y;rule.x+=y/S.c[i]}
+ return {start,scv,total:n-start,bands:{strong:fin(bands.strong),ok:fin(bands.ok),skip:fin(bands.skip)},bins:bins.map(fin),dca,rule};
+}
+
+/* ---------- 合図（過去に、買った後で値段が上だった割合が高かった条件） ---------- */
+const SIG=[['rsiw',-1,'週足 RSI が',' 以下',1],['dd',1,'過去最高値からの下落率が','% 以上',0],['btc',-1,'XRP/BTC 比率が200日平均の','倍 以下',2],['pos',-1,'過去4年の値幅の中の位置が','% 以下',0],['fng',-1,'恐怖と欲の指数が',' 以下',0]];
+const SIGTH={rsiw:null,dd:80,btc:0.9,pos:20,fng:15};
+function sigStat(S,start,f,H){const mid=S.ts.findIndex(t=>t>=Date.UTC(2022,0,1));let n=0,w=0,a=[0,0],b=[0,0],ep=0,last=-99,worst=null;
+ for(let i=start;i+H<S.n;i++){if(f&&!f(i))continue;const r=S.c[i+H]/S.c[i];n++;if(r>1)w++;const h=i<mid?a:b;h[0]++;if(r>1)h[1]++;if(i-last>30)ep++;last=i;if(worst==null||r<worst)worst=r}
+ return {n,ep,worst,win:n?w/n*100:null,early:a[0]?a[1]/a[0]*100:null,late:b[0]?b[1]/b[0]*100:null}}
+function signals(S,start){const i=S.n-1;return [{name:'（比べる相手）いつ買っても',base:true,on:null,y1:sigStat(S,start,null,365),y2:sigStat(S,start,null,730)}].concat(SIG.map(([k,dir,pre,post,d])=>{
+  const th=k==='rsiw'?cfg.sigTh:SIGTH[k],f=j=>S.ind[k][j]!=null&&(dir>0?S.ind[k][j]>=th:S.ind[k][j]<=th);
+  return {k,name:pre+th+post,cur:S.ind[k][i],d,on:f(i),y1:sigStat(S,start,f,365),y2:sigStat(S,start,f,730)}}))}
+
+/* ---------- 画面 ---------- */
+function renderAll(){
+ const S=state.S;if(!S){return}
+ const i=S.n-1,price=S.c[i];S.ind.man[i]=fmScore();
+ const s=total(S,i),bt=backtest(S);state.bt=bt;state.price=price;
+ const gs={p:total(S,i,'p'),f:total(S,i,'f'),w:total(S,i,'w'),t:total(S,i,'t')};
+ let b=band(s),down=false;if(b&&gs.f!=null&&gs.f<cfg.minF){down=true;b=b==='strong'?'ok':'skip'}
+ const cls={strong:'go',ok:'okc',skip:'no'}[b]||'';
+ const msg={strong:'買い増してよい状態です（強い）',ok:'予定の額なら買ってよい状態です（ふつう）',skip:'今は見送りです'}[b]||'点数を出せません（データ不足）';
+ const amt=b?cfg.budget*mult(b):null;
+ const row=(k,range)=>{const g=bt?bt.bands[k]:null;return `<tr class="${b===k?'cur':''}"><td>${range}　${BN[k]}${b===k?'　← 今ここ':''}</td><td>予定額 × ${num(mult(k),2)} ＝ ${yen(cfg.budget*mult(k))}</td><td>${g?num(g.days/bt.total*100,0)+'%':'—'}</td><td>${g&&g.up!=null?num(g.up,0)+'%':'—'}</td><td>${g&&g.med!=null?num(g.med,2)+'倍':'—'}</td></tr>`};
+ const sg=bt?signals(S,bt.start):[],main=sg.find(x=>x.k==='rsiw'),pc=v=>v==null?'—':num(v,0)+'%';
+ const sgRow=x=>`<tr class="${x.on?'cur':''}"><td>${x.name}${x.k==='rsiw'?'　★合図':''}</td><td>${x.base?'—':x.on?'<b class="go">あてはまる</b>':'あてはまらない'}${x.base||x.cur==null?'':'（今 '+num(x.cur,x.d)+'）'}</td><td>${pc(x.y1.win)}</td><td>${pc(x.y1.early)} / ${pc(x.y1.late)}</td><td>${x.y1.worst==null?'—':num(x.y1.worst,2)+'倍'}</td><td>${pc(x.y2.win)}</td><td>${x.y1.n}日・${x.y1.ep}回</td></tr>`;
+ $('sig').innerHTML=main?`<h2>買い増しの合図</h2>
+ <div class="verdict ${main.on?'go':'no'}">${main.on?'合図が出ています':'合図は出ていません'}</div>
+ <p>合図の条件：<b>週足 RSI が ${cfg.sigTh} 以下</b>（今 ${num(main.cur,1)}）</p>
+ <p>過去にこの条件の日に買った場合、値段が上だった割合は、1年後 <b>${pc(main.y1.win)}</b>、2年後 <b>${pc(main.y2.win)}</b> でした（${main.y1.n}日、別々の時期で ${main.y1.ep}回。1年後でいちばん悪かった例は ${main.y1.worst==null?'—':num(main.y1.worst,2)+'倍'}）。</p>
+ <p class="note">これは過去（${dstr(S.ts[bt.start])}〜、bitbank の XRP/円）に起きた割合で、これからの確率ではありません。XRP の大きな上げ下げは数回しかなく、条件は過去に合わせて選んでいるので、これからは下がることがあります。手数料・税金は入っていません。</p>
+ <h3>ほかの条件との比べ</h3>
+ <div class="wrap"><table><tr><th>条件</th><th>今</th><th>1年後に上だった割合</th><th>うち 2021年まで / 2022年から</th><th>1年後でいちばん悪かった例</th><th>2年後に上だった割合</th><th>数えた日数・時期の数</th></tr>${sg.map(sgRow).join('')}</table></div>
+ <p class="note">合図にしたのは、1年後の割合が70%以上で、前半と後半のどちらでも60%以上、別々の時期が10回以上あった条件です。ほかの条件は、どちらかの期間で50%を下回っています。合図の数字は「設定」で変えられます。</p>`:'<h2>買い増しの合図</h2><p>データが足りません。</p>';
+ $('now').innerHTML=`<h2>総合点と買う額の目安</h2>
+ <div class="big"><div class="score ${cls}">${s==null?'—':num(s,0)}<small> 点</small></div>
+ <div><div class="verdict ${cls}">${msg}</div>
+ <div>今月買う額の目安：<b>${amt==null?'—':yen(amt)}</b>（毎月の予定額 ${yen(cfg.budget)} × ${b?num(mult(b),2):'—'}）</div>
+ <div class="note">XRP の値段：${num(price,3)}円（bitbank・${dstr(S.ts[i])} の日足）</div></div></div>
+ ${down?`<p class="bad">将来性の点（${num(gs.f,0)}点）が下限の ${cfg.minF}点より低いので、判定を1段下げています。</p>`:''}
+ <div class="kv">${GO.map(g=>`<div><span>${GN[g]}</span><b>${gs[g]==null?'—':num(gs[g],0)+' 点'}</b><span>${GH[g]}</span></div>`).join('')}</div>
+ <p class="note">考え方：相場の勢い（トレンド）ではなく、「将来の価値に対して今の値段が安いか」を見ます。将来性の点が保たれていて、値段が安い時に総合点が高くなります。相場の過熱の指標は重みを小さくしています。</p>
+ <h3>点数と行動の決まり（自分で決めた基準）</h3>
+ <div class="wrap"><table><tr><th>総合点</th><th>買う額</th><th>過去にこの点数だった日の割合</th><th>1年後に値段が上だった割合</th><th>1年後の値段（真ん中の値）</th></tr>
+ ${row('strong',cfg.strong+'点以上')}${row('ok',cfg.ok+'〜'+(cfg.strong-1)+'点')}${row('skip',cfg.ok+'点未満')}</table></div>
+ <p class="note">右の3つは過去（${bt?dstr(S.ts[bt.start]):'—'}〜）の結果で、値段の指標（安さと過熱）の点だけで数えています（将来性と大口は過去の数字がそろわないため）。これからも同じになるとは限りません。しきい値・倍率・予定額は「設定」で変えられます。</p>`;
+
+ let sw=0;for(const d of cfg.inds){if(d.w>0&&sc(S.ind[d.k][i],d)!=null)sw+=d.w}
+ const line=d=>{const v=S.ind[d.k][i],p=sc(v,d);return `<tr><td>${d.n}</td><td>${v==null?'取れていません':num(v,d.d)+d.u}</td><td>${p==null?'—':num(p,0)}</td><td><div class="bar"><i style="width:${p==null?0:p}%"></i></div></td><td>${d.w}</td><td>${p==null||!sw||!(d.w>0)?'—':num(d.w*p/sw,1)}</td></tr>`};
+ $('detail').innerHTML=`<h2>指標ごとの点数</h2><div class="wrap"><table><tr><th>指標</th><th>今の数字</th><th>点数</th><th></th><th>重み</th><th>総合点への寄与</th></tr>
+ ${GO.map(g=>`<tr><td colspan="6"><b>${GN[g]}：${gs[g]==null?'—':num(gs[g],0)+' 点'}</b></td></tr>`+cfg.inds.filter(d=>d.g===g).map(line).join('')).join('')}
+ <tr><td><b>総合点</b></td><td></td><td></td><td></td><td>${sw}</td><td><b>${s==null?'—':num(s,1)}</b></td></tr></table></div>
+ <p class="note">点数は「0点の値」から「100点の値」までをまっすぐ結んで出します。取れていない指標は外し、残りの重みで計算します。</p>`;
+ renderFm();renderHold();renderTest();renderConf();renderRef();renderFile();renderSrc();
+}
+function renderFm(){
+ const old=fm.at?Math.floor((Date.now()-new Date(fm.at).getTime())/864e5):null;
+ $('fm').innerHTML=`<h2>リップル社と XRP の材料を点にする（自分で付ける）</h2>
+ <p class="note">ニュースは自動では取れないので、5つの項目を自分で確かめて選びます。良い＝+10点、変わらず＝0点、悪い＝−10点で、50点から足し引きします。</p>
+ <div class="wrap"><table><tr><th>項目</th><th>今の見方</th></tr>
+ ${FM.map(([k,n])=>`<tr><td>${n}</td><td><select data-fm="${k}">${[[1,'良い（+10）'],[0,'変わらず（0）'],[-1,'悪い（−10）']].map(([v,t])=>`<option value="${v}" ${(+fm.v[k]||0)===v?'selected':''}>${t}</option>`).join('')}</select></td></tr>`).join('')}
+ <tr><td><b>材料の点</b></td><td><b>${fmScore()} 点</b></td></tr></table></div>
+ <p class="note ${old!=null&&old>30?'bad':''}">${fm.at?'最後に直した日：'+esc(fm.at)+(old>30?'（30日以上たっています。見直してください）':''):'まだ付けていません（全部「変わらず」＝50点で計算しています）'}</p>
+ <p class="note">確かめる先：<a href="https://ripple.com/insights/" target="_blank" rel="noopener">Ripple Insights</a>　<a href="https://www.sec.gov/newsroom" target="_blank" rel="noopener">SEC の発表</a>　<a href="https://www.fsa.go.jp/news/index.html" target="_blank" rel="noopener">金融庁の発表</a>　<a href="https://xrpscan.com/" target="_blank" rel="noopener">XRPScan</a></p>
+ <h3>材料のメモ</h3>
+ <textarea id="memo" placeholder="例：11/20 ○○の ETF の審査の期限は 12/15">${esc(memo)}</textarea>`;
+}
+
+function renderHold(){
+ const p=state.price,buys=hold.buys||[];
+ const q=(+hold.baseQty||0)+buys.reduce((a,x)=>a+(+x.q||0),0);
+ const cost=(+hold.baseQty||0)*(+hold.baseAvg||0)+buys.reduce((a,x)=>a+(+x.q||0)*(+x.p||0),0);
+ const avg=q?cost/q:null,val=q*p,ix=q*(+hold.share||0)/100*(+hold.rate||0)/100;
+ $('hold').innerHTML=`<h2>保有と貸し出しの利息の見込み</h2>
+ <div class="grid">
+ <label>今までの保有数（XRP）<input type="number" step="any" min="0" data-h="baseQty" value="${esc(hold.baseQty)}"></label>
+ <label>その平均の買値（円）<input type="number" step="any" min="0" data-h="baseAvg" value="${esc(hold.baseAvg)}"></label>
+ <label>貸し出しの利率（年 %）<input type="number" step="any" min="0" data-h="rate" value="${esc(hold.rate)}"></label>
+ <label>貸し出す割合（%）<input type="number" step="any" min="0" max="100" data-h="share" value="${esc(hold.share)}"></label></div>
+ <div class="kv">
+ <div><span>保有数</span><b>${num(q,2)} XRP</b></div>
+ <div><span>平均の買値</span><b>${avg==null?'—':num(avg,3)+'円'}</b></div>
+ <div><span>今の資産額</span><b>${yen(val)}</b></div>
+ <div><span>買った額との差</span><b class="${val-cost<0?'bad':''}">${q?yen(val-cost):'—'}</b></div>
+ <div><span>利息の見込み（年）</span><b>${num(ix,2)} XRP</b><span>今の値段で ${yen(ix*p)}</span></div>
+ <div><span>利息の見込み（月）</span><b>${num(ix/12,2)} XRP</b><span>今の値段で ${yen(ix*p/12)}</span></div></div>
+ <p class="note">利息は「保有数 × 貸し出す割合 × 利率」の単純な計算です。税金・手数料・利率の変更・貸し出し先のリスクは入っていません。</p>
+ <h3>買い増しの記録</h3>
+ <div class="row"><input type="date" id="bDate" value="${today()}"><input type="number" id="bQty" step="any" min="0" placeholder="数量 XRP"><input type="number" id="bPrice" step="any" min="0" placeholder="買値 円" value="${p?p.toFixed(3):''}"><input type="text" id="bMemo" placeholder="メモ" maxlength="60"><button class="main" id="bAdd">記録する</button></div>
+ <div class="wrap"><table><tr><th>日付</th><th>数量（XRP）</th><th>買値（円）</th><th>金額</th><th>メモ</th><th></th></tr>
+ ${buys.length?buys.map((x,k)=>`<tr><td>${esc(x.d)}</td><td>${num(+x.q,2)}</td><td>${num(+x.p,3)}</td><td>${yen(x.q*x.p)}</td><td style="text-align:left">${esc(x.m)}</td><td><button data-del="${k}">消す</button></td></tr>`).join(''):'<tr><td colspan="6">まだ記録がありません</td></tr>'}</table></div>`;
+}
+
+function renderTest(){
+ const S=state.S,bt=state.bt;
+ if(!bt){$('test').innerHTML='<h2>過去の値動きでの検証</h2><p>データが足りないので検証できません。</p>';return}
+ const r=bt.rule,d=bt.dca,ra=r.x?r.spent/r.x:null,da=d.x?d.spent/d.x:null;
+ $('test').innerHTML=`<h2>過去の値動きでの検証</h2>
+ <p class="note">期間：${dstr(S.ts[bt.start])} 〜 ${dstr(S.ts[S.n-1])}（${bt.total}日）。今の重みとしきい値を、過去の毎日に当てた結果です。資金調達率は過去の分が約66日しか取れないので、検証には入れていません。</p>
+ <canvas id="cv"></canvas>
+ <p class="note">線は XRP/円 の値段（目盛りは倍率で等間隔）。<b class="go">緑</b>＝強い、<b class="okc">青</b>＝ふつう、<span style="color:#aab4be">灰色</span>＝見送りの日。</p>
+ <h3>毎月1回、月の初めに買った場合の比較</h3>
+ <div class="wrap"><table><tr><th>買い方</th><th>買った月</th><th>使った額</th><th>買えた数</th><th>平均の買値</th><th>今の値段での資産額</th></tr>
+ <tr><td>毎月 同じ額（${yen(cfg.budget)}）</td><td>${d.m}回</td><td>${yen(d.spent)}</td><td>${num(d.x,0)} XRP</td><td>${da==null?'—':num(da,2)+'円'}</td><td>${yen(d.x*state.price)}</td></tr>
+ <tr><td>点数の決まりどおり</td><td>${r.strong+r.ok}回（強い ${r.strong}・ふつう ${r.ok}・見送り ${r.skip}）</td><td>${yen(r.spent)}</td><td>${num(r.x,0)} XRP</td><td>${ra==null?'—':num(ra,2)+'円'}</td><td>${yen(r.x*state.price)}</td></tr></table></div>
+ <p class="note">「決まりどおり」は、その月の初めの点数で、設定の倍率の額を買った場合です（倍率が0の月は買いません）。使った額がちがうので、平均の買値で比べてください。</p>
+ <h3>点数10点きざみで見た過去の結果</h3>
+ <div class="wrap"><table><tr><th>点数</th><th>日数</th><th>その日の値段の平均</th><th>1年後に値段が上だった割合</th><th>1年後の値段（真ん中の値）</th><th>数えた日数</th></tr>
+ ${bt.bins.map((g,k)=>`<tr><td>${k*10}〜${k===9?100:k*10+9}点</td><td>${g.days}</td><td>${g.avg==null?'—':num(g.avg,2)+'円'}</td><td>${g.up==null?'—':num(g.up,0)+'%'}</td><td>${g.med==null?'—':num(g.med,2)+'倍'}</td><td>${g.n1}</td></tr>`).join('')}</table></div>
+ <p class="note">日数が少ない行は当てになりません。XRP の大きな上げ下げは数回しかなく、過去の結果はこれからを約束しません。</p>`;
+ drawChart();
+}
+function drawChart(){
+ const cv=$('cv'),S=state.S,bt=state.bt;if(!cv||!bt)return;
+ const dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;
+ const g=cv.getContext('2d');g.scale(dpr,dpr);g.clearRect(0,0,W,H);
+ const a=bt.start,n=S.n,L=46,R=6,T=8,B=22;let lo=Infinity,hi=0;for(let i=a;i<n;i++){lo=Math.min(lo,S.c[i]);hi=Math.max(hi,S.c[i])}
+ const X=i=>L+(i-a)/(n-1-a)*(W-L-R),Y=v=>T+(Math.log(hi)-Math.log(v))/(Math.log(hi)-Math.log(lo))*(H-T-B);
+ g.font='11px sans-serif';g.fillStyle='#5b6875';g.strokeStyle='#e3e8ec';g.lineWidth=1;
+ for(const v of[lo,Math.sqrt(lo*hi),hi]){g.beginPath();g.moveTo(L,Y(v));g.lineTo(W-R,Y(v));g.stroke();g.textAlign='right';g.textBaseline='middle';g.fillText(Math.round(v)+'円',L-4,Math.min(H-B-6,Math.max(T+6,Y(v))))}
+ let ly=null,lx=-99;g.textAlign='center';g.textBaseline='alphabetic';
+ for(let i=a;i<n;i++){const y=new Date(S.ts[i]).getUTCFullYear();if(y!==ly){if(ly!==null&&X(i)-lx>40&&X(i)<W-20){g.fillText(y,X(i),H-6);lx=X(i)}ly=y}}
+ const col={strong:'#0a7d4b',ok:'#2b6cb0',skip:'#aab4be'};g.lineWidth=1.6;
+ for(let i=a+1;i<n;i++){g.strokeStyle=col[band(bt.scv[i])]||'#aab4be';g.beginPath();g.moveTo(X(i-1),Y(S.c[i-1]));g.lineTo(X(i),Y(S.c[i]));g.stroke()}
+}
+
+function renderConf(){
+ $('conf').innerHTML=`<h2>設定（重みとしきい値）</h2>
+ <div class="wrap"><table><tr><th>指標</th><th>重み</th><th>0点の値</th><th>100点の値</th></tr>
+ ${cfg.inds.map((d,k)=>`<tr><td>${d.n}${d.u?'（'+d.u+'）':''}</td><td><input type="number" step="any" min="0" data-i="${k}" data-f="w" value="${d.w}"></td><td><input type="number" step="any" data-i="${k}" data-f="zero" value="${d.zero}"></td><td><input type="number" step="any" data-i="${k}" data-f="full" value="${d.full}"></td></tr>`).join('')}</table></div>
+ <div class="grid" style="margin-top:12px">
+ <label>「強い」にする点数（以上）<input type="number" step="1" data-c="strong" value="${cfg.strong}"></label>
+ <label>「ふつう」にする点数（以上）<input type="number" step="1" data-c="ok" value="${cfg.ok}"></label>
+ <label>合図にする週足 RSI（以下）<input type="number" step="1" data-c="sigTh" value="${cfg.sigTh}"></label>
+ <label>将来性の点の下限（これ未満は判定を1段下げる。0 で使わない）<input type="number" step="1" data-c="minF" value="${cfg.minF}"></label>
+ <label>毎月の予定額（円）<input type="number" step="1000" min="0" data-c="budget" value="${cfg.budget}"></label>
+ <label>「強い」の時の倍率<input type="number" step="any" min="0" data-c="mStrong" value="${cfg.mStrong}"></label>
+ <label>「ふつう」の時の倍率<input type="number" step="any" min="0" data-c="mOk" value="${cfg.mOk}"></label>
+ <label>「見送り」の時の倍率<input type="number" step="any" min="0" data-c="mSkip" value="${cfg.mSkip}"></label></div>
+ <div class="row"><button id="reset">初めの値に戻す</button><span class="note">数字を変えると、判定と検証をすぐ計算し直します。</span></div>`;
+}
+
+function renderRef(){
+ const ks=Object.keys(snaps).sort(),cur=ks.length?snaps[ks[ks.length-1]]:null,prev=ks.length>1?snaps[ks[ks.length-2]]:null;
+ const diff=(f)=>cur&&prev&&cur[f]!=null&&prev[f]!=null?'（'+esc(ks[ks.length-2])+' から '+(cur[f]-prev[f]>=0?'+':'')+num(cur[f]-prev[f],0)+'）':'';
+ let esc_=null,escD=null;for(let k=ks.length-1;k>=0;k--){if(snaps[ks[k]].escrow!=null){esc_=snaps[ks[k]].escrow;escD=ks[k];break}}
+ const wh=state.wh,wrow=(n,g)=>g?`<tr><td>${n}</td><td>${num(g.n,0)} 口座</td><td>${num(g.was/1e8,2)}億 XRP</td><td>${num(g.now/1e8,2)}億 XRP</td><td>${g.pct==null?'—':(g.pct>=0?'+':'')+num(g.pct,2)+'%'}</td></tr>`:'';
+ $('ref').innerHTML=`<h2>大口の動きの内わけ</h2>
+ ${wh?`<div class="wrap"><table><tr><th>グループ</th><th>数えた口座</th><th>${esc(wh.then)} ごろ</th><th>今</th><th>増減</th></tr>
+ ${wrow('取引所などの名前が付いた口座（残高の上位30）',wh.exch)}${wrow('名前のない大口の口座（残高の上位30）',wh.whale)}</table></div>
+ <p class="note">XRPScan の残高の一覧（上位1万口座）から、リップル社と創業者の口座を除いて選び、XRPL の台帳で約30日前の残高と比べています。今の上位の口座で比べるので、大口は増えた方に出やすいです。名前のない口座には、取引所の口座が混じっていることがあります。機関投資家かどうかは分かりません。</p>`:'<p>大口のデータは取れていません。</p>'}
+ <h2 style="margin-top:18px">参考の数字（点数には入れていません）</h2>
+ <div class="kv">
+ <div><span>XRPL の取引数（${cur?esc(ks[ks.length-1]):'—'}）</span><b>${cur?num(cur.tx,0):'—'}</b><span>${diff('tx')}</span></div>
+ <div><span>うち支払いの数</span><b>${cur?num(cur.pay,0):'—'}</b><span>${diff('pay')}</span></div>
+ <div><span>動いた口座の数</span><b>${cur?num(cur.act,0):'—'}</b><span>${diff('act')}</span></div>
+ <div><span>流通している数</span><b>${cur&&cur.supply?num(cur.supply/1e8,1)+'億 XRP':'—'}</b></div>
+ <div><span>エスクローの残高（上位1万口座の合計）</span><b>${esc_!=null?num(esc_/1e8,1)+'億 XRP':'未取得'}</b><span>${escD?esc(escD)+' 時点':''}</span></div>
+ <div><span>資金調達率（直近7日の平均）</span><b>${state.fund==null?'—':num(state.fund,4)+'%'}</b><span>Bybit・8時間あたり</span></div></div>
+ <p class="note">XRPL の数字は XRPScan のその日の集計で、日の途中は少なく出ます。過去の分は取れないので、このページを開いた日の数字を端末にためています（今 ${ks.length}日分）。</p>`;
+}
+
+function renderFile(){
+ $('file').innerHTML=`<h2>記録の書き出し・読み込み（パソコンを変える時）</h2>
+ <div class="row"><button class="main" id="exp">ファイルに書き出す</button><label><button id="impBtn" type="button">ファイルから読み込む</button><input type="file" id="imp" accept=".json,application/json" hidden></label><span id="fileMsg" class="note"></span></div>
+ <p class="note">書き出すのは、設定・保有・買い増しの記録・メモ・ためた参考の数字です。読み込むと、今の記録は読み込んだ内容に置きかわります。</p>`;
+}
+function renderSrc(){
+ $('src').innerHTML=`<h2>データの出どころと取得の状態</h2><div class="wrap"><table><tr><th>データ</th><th>状態</th></tr>
+ ${Object.keys(state.src).map(k=>`<tr><td>${esc(k)}</td><td style="text-align:left" class="${state.src[k].ok?'':'bad'}">${state.src[k].ok?'取れました：':'取れません：'}${esc(state.src[k].msg)}</td></tr>`).join('')}</table></div>
+ <p class="note">値段：bitbank 公開 API（XRP/円・BTC/円）。恐怖と欲の指数：<a href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" rel="noopener">alternative.me の Crypto Fear &amp; Greed Index</a>。資金調達率：Bybit。XRPL の数字と残高の一覧：XRPScan。30日前の残高：xrplcluster.com（XRPL の台帳）。預けられた資産・ステーブルコイン残高・DEX の出来高：DefiLlama。流通している数：CoinGecko。</p>
+ <p class="note">値段は、開くたびに取り直します（10分以内は前の数字を使います）。ほかのデータを取るのは1日1回までです。開いたままでは変わらないので、見る時に開き直してください。回数の上限（HTTP 429・403）が返ったら6時間は呼ばず、前に取った数字を使います。</p>
+ <div class="row"><button id="reload">データを取り直す</button><span id="reloadMsg" class="note"></span></div>`;
+}
+
+/* ---------- 操作 ---------- */
+document.addEventListener('change',e=>{const t=e.target;
+ if(t.dataset.i!=null){const v=parseFloat(t.value);if(isFinite(v)){cfg.inds[+t.dataset.i][t.dataset.f]=v;set('cfg',cfg);renderAll()}}
+ else if(t.dataset.c){const v=parseFloat(t.value);if(isFinite(v)){cfg[t.dataset.c]=v;set('cfg',cfg);renderAll()}}
+ else if(t.dataset.h){const v=parseFloat(t.value);hold[t.dataset.h]=isFinite(v)?v:0;set('hold',hold);renderHold()}
+ else if(t.id==='memo'){memo=t.value;set('memo',memo)}
+ else if(t.dataset.fm){fm.v[t.dataset.fm]=+t.value;fm.at=today();set('fm',fm);renderAll()}
+ else if(t.id==='imp'&&t.files[0]){const fr=new FileReader();fr.onload=()=>{try{const j=JSON.parse(fr.result);if(j.app!=='xrp-accumulator')throw new Error('このツールのファイルではありません');
+   if(j.cfg){set('cfg',j.cfg);cfg=loadCfg()}if(j.hold){hold=j.hold;if(!Array.isArray(hold.buys))hold.buys=[];set('hold',hold)}if(typeof j.memo==='string'){memo=j.memo;set('memo',memo)}if(j.fm&&j.fm.v){fm={v:j.fm.v,at:String(j.fm.at||'')};set('fm',fm)}if(j.snaps&&typeof j.snaps==='object'){snaps=j.snaps;set('snaps',snaps)}
+   renderAll();$('fileMsg').textContent='読み込みました（'+(j.exported||'')+' に書き出したファイル）'}catch(err){$('fileMsg').textContent='読み込めません：'+err.message}};fr.readAsText(t.files[0])}
+});
+document.addEventListener('click',async e=>{const t=e.target;
+ if(t.id==='bAdd'){const q=parseFloat($('bQty').value),p=parseFloat($('bPrice').value);if(!(q>0)||!(p>0)){alert('数量と買値を入れてください');return}
+  hold.buys.push({d:$('bDate').value||today(),q,p,m:$('bMemo').value.slice(0,60)});hold.buys.sort((a,b)=>a.d<b.d?-1:1);set('hold',hold);renderHold()}
+ else if(t.dataset.del!=null){if(confirm('この記録を消しますか？')){hold.buys.splice(+t.dataset.del,1);set('hold',hold);renderHold()}}
+ else if(t.id==='reset'){if(confirm('設定を初めの値に戻しますか？')){cfg=JSON.parse(JSON.stringify(DEF));set('cfg',cfg);renderAll()}}
+ else if(t.id==='impBtn'){$('imp').click()}
+ else if(t.id==='exp'){const data={app:'xrp-accumulator',version:1,exported:new Date().toISOString(),cfg,hold,memo,fm,snaps};
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,1)],{type:'application/json'}));a.download='xrp-accumulator-'+today()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$('fileMsg').textContent='書き出しました：'+a.download}
+ else if(t.id==='reload'){const last=get('reloadAt',0);if(Date.now()-last<600e3){$('reloadMsg').textContent='取り直しは10分に1回までです';return}
+  set('reloadAt',Date.now());const y=new Date().getUTCFullYear();for(const k of['c.xrp_jpy.'+y,'c.btc_jpy.'+y,'fng','fund','xs','cg','ltvl','lstb','ldex']){try{localStorage.removeItem(LS+k)}catch(e){}delete mem[k]}state.src={};load()}
+});
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(drawChart,150)});
+
+/* ---------- 読み込み ---------- */
+async function load(){
+ $('status').textContent='データを読み込んでいます…（初めての時は20回ほど取りに行きます）';
+ try{
+  const x=await candles('xrp_jpy');
+  if(!x.length)throw new Error('値段のデータがありません');
+  let btc=[];try{btc=await candles('btc_jpy')}catch(e){state.src['bitbank btc_jpy']={ok:false,msg:e.message}}
+  const [fng,fund,xs,cg]=await Promise.all([
+   daily('fng','alternative','https://api.alternative.me/fng/?limit=0',j=>j.data.map(d=>[d.timestamp*1000,+d.value]),'恐怖と欲の指数（alternative.me）'),
+   daily('fund','bybit','https://api.bybit.com/v5/market/funding/history?category=linear&symbol=XRPUSDT&limit=200',j=>{const l=j.result.list.slice(0,21).map(r=>+r.fundingRate);return l.length?l.reduce((a,b)=>a+b,0)/l.length*100:null},'資金調達率（Bybit）'),
+   daily('xs','xrpscan','https://api.xrpscan.com/api/v1/statistics/metrics',j=>({date:String(j.date).slice(0,10),tx:j.metric.transaction_count,pay:j.metric.payments_count,act:j.metric.active_accounts}),'XRPL の利用状況（XRPScan）'),
+   daily('cg','coingecko','https://api.coingecko.com/api/v3/coins/ripple?localization=false&tickers=false&community_data=false&developer_data=false',j=>j.market_data.circulating_supply,'流通している数（CoinGecko）')]);
+  const [ltvl,lstb,ldex]=await Promise.all([
+   daily('ltvl','llama','https://api.llama.fi/v2/historicalChainTvl/XRPL',j=>j.map(d=>[d.date*1000,Math.round(d.tvl)]),'XRPL に預けられた資産（DefiLlama）'),
+   daily('lstb','llama','https://stablecoins.llama.fi/stablecoincharts/XRPL',j=>j.map(d=>[d.date*1000,Math.round((d.totalCirculatingUSD&&d.totalCirculatingUSD.peggedUSD)||0)]),'XRPL のステーブルコイン残高（DefiLlama）'),
+   daily('ldex','llama','https://api.llama.fi/overview/dexs/XRPL?excludeTotalDataChart=false&excludeTotalDataChartBreakdown=true',j=>(j.totalDataChart||[]).map(d=>[d[0]*1000,Math.round(d[1])]),'XRPL の DEX の出来高（DefiLlama）')]);
+  const S=build(x,new Map(btc.map(r=>[r[0],r[3]])),new Map(fng||[]),{tvl:new Map(ltvl||[]),stb:new Map(lstb||[]),dex:new Map(ldex||[])});
+  if(fund!=null)S.ind.fund[S.n-1]=fund;state.fund=fund;
+  if(xs&&xs.date){snaps[xs.date]=Object.assign(snaps[xs.date]||{},{tx:xs.tx,pay:xs.pay,act:xs.act},cg?{supply:cg}:{});set('snaps',snaps)}
+  state.S=S;renderAll();
+  $('status').textContent='大口の動きを取っています…（1日1回・60回ほど取りに行きます）';
+  const wh=await whales();state.wh=wh;
+  if(wh){if(wh.exch&&wh.exch.pct!=null)S.ind.exch[S.n-1]=wh.exch.pct;if(wh.whale&&wh.whale.pct!=null)S.ind.whale[S.n-1]=wh.whale.pct;
+   snaps[wh.day]=Object.assign(snaps[wh.day]||{},{escrow:wh.escrow});set('snaps',snaps)}
+  renderAll();
+  const bad=Object.values(state.src).filter(v=>!v.ok).length;
+  $('status').textContent='表示：'+new Date().toLocaleString('ja-JP')+(bad?'　取れなかったデータが '+bad+' つあります（下の「データの出どころ」を見てください）':'');
+ }catch(e){$('status').innerHTML='<span class="bad">データを取れませんでした：'+esc(e.message)+'。ネットにつながっているか確かめて、時間をおいて開き直してください。</span>'}
+}
+load();
+</script>
+</body>
+</html>
