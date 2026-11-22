@@ -1,0 +1,28 @@
+# 新しい発表を読んで、解説と「考え方の段」を自動で書き直す（1日1回）。
+# AI は Google Gemini の無料枠だけを使う。鍵は Secrets の GEMINI_API_KEY。鍵が無い日は何もしない。
+name: auto-learn
+on:
+  schedule:
+    - cron: "55 21 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: auto-learn
+  cancel-in-progress: false
+jobs:
+  learn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: learn
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python3 -I learn.py
+      - name: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add analysis-auto.js data/auto.json 2>/dev/null || true
+          git diff --cached --quiet || (git commit -m "auto learn" && git pull --rebase && git push)
