@@ -458,15 +458,17 @@ const oku=v=>v==null||!isFinite(v)?'—':v>=10000?num(v/10000,2)+'兆ドル':v>=
 function mkCalc(){
  const st=state,ov=cfg.mk||{},liq=isFinite(cfg.liq)?cfg.liq:5,via=isFinite(cfg.via)?cfg.via:20,turn=isFinite(cfg.turn)&&cfg.turn>0?cfg.turn:365;
  const live={stable:{m0:st.stAll?st.stAll.now/1e8:null,r0:st.rl?st.rl.now/1e8:null,x:st.rl&&st.rl.now?st.rl.xrpl/st.rl.now*100:null},bridge:{r0:st.fl?st.fl.now/1e8+1.2:null},col:st.cg&&st.cg.usd?{m0:17*st.cg.usd,r0:0.75*st.cg.usd}:{}};
+ // 毎日の記録（DefiLlama の分野ごとの残高）を、調べた日からの伸びの目盛りとして使う
+ const H=st.mkj||[],idx=k=>H.length>1&&H[0][k]>0&&H[H.length-1][k]>0?H[H.length-1][k]/H[0][k]:1,IK={lend:'lend',rwa:'rwa',bridge:'bridge'};
  let need=0,lm=0,ln=0;
- const rows=MK.map(d=>{const L=live[d.k]||{},u=ov[d.k]||{},m0=L.m0||d.m0,r0=L.r0!=null?L.r0:d.r0,g=d.g.slice(),sh=d.sh.slice();
+ const rows=MK.map(d=>{const L=live[d.k]||{},u=ov[d.k]||{},ix=IK[d.k]?idx(IK[d.k]):1,m0=(L.m0||d.m0)*ix,r0=L.r0!=null?L.r0:d.r0,g=d.g.slice(),sh=d.sh.slice();
   if(isFinite(u.g))g[1]=+u.g;if(isFinite(u.sh))sh[1]=+u.sh;const x=isFinite(u.x)?+u.x:(L.x!=null?L.x:d.x);
   const s0=r0!=null?r0/m0*100:null,ss=s0!=null?s0:d.sh[0]/2;   // 今の取り分が分からない市場は、低い見方の半分から始める（仮定）
   const at=(j,y)=>{const M=m0*Math.pow(1+g[j]/100,y),sT=sh[j]==null?ss:sh[j],s=ss+(sT-ss)*Math.min(1,y/5);return {M,R:M*s/100,s}};
   const now=at(1,0),y5=[at(0,5),at(1,5),at(2,5)],mult=now.R>0?y5[1].R/now.R:null;
   const on=y5[1].R*x/100,xr=d.kind==='col'?on:d.kind==='bal'?on*(d.k==='lend'?30:liq)/100:d.kind==='flow'?on*via/100/turn:0;need+=xr;
   if(mult&&mult>0&&r0!=null&&r0>0){lm+=Math.log2(mult);ln++}   // 今の数字が公表されている市場だけで平均する
-  return Object.assign({},d,{m0,r0,g,sh,x,s0,now,y1:at(1,1),y3:at(1,3),y5,mult,on,xr,edited:!!ov[d.k]})});
+  return Object.assign({},d,{ix,auto:!!((L.m0&&d.k!=='col')||IK[d.k]),m0,r0,g,sh,x,s0,now,y1:at(1,1),y3:at(1,3),y5,mult,on,xr,edited:!!ov[d.k]})});
  const gm=ln?Math.pow(2,lm/ln):null,score=gm==null?null:Math.max(0,Math.min(100,30+20*Math.log2(gm)));   // 1倍＝30点、2倍＝50点、4倍＝70点、8倍＝90点
  const usd=st.cg&&st.cg.usd,sup=st.cg&&st.cg.sup,needX=usd?need*1e8/usd:null;
  return {rows,gm,score,need,needX,pct:needX&&sup?needX/sup*100:null,liq,via,turn}}
@@ -478,6 +480,7 @@ function mkHtml(M){
  <div><span>今、XRPL で実際に使われている XRP</span><b>${xs.amm!=null?num(xs.amm/1e4,0)+'万 XRP':'—'}</b><span>流動性の池の中。1日の焼却 ${xs.fee!=null?num(xs.fee,0)+' XRP':'—'}</span></div></div>
  <div class="tcs">${M.rows.map(r=>{const mx=Math.max(r.y5[2].R,1e-9);return `<div class="tc"><div class="tch"><b>${r.n}</b><span class="chip ${r.tc}" style="white-space:normal;text-align:right">${r.type}</span></div>
  <div class="sub">市場（${r.unit}）：今 ${oku(r.m0)} → 5年後 <b style="color:var(--ink)">${oku(r.y5[1].M)}</b>（${oku(r.y5[0].M)}〜${oku(r.y5[2].M)}）</div>
+ <div class="sub">${r.auto?'<b class="go">毎日更新</b>'+(r.ix!==1?'（調べた日から '+pm((r.ix-1)*100)+'）':''):'手で置いた数字（2026-11-22 調べ）'}</div>
  <div class="sub" style="margin-top:4px">リップル側：今 ${r.r0!=null?oku(r.now.R):'非公表'} → 5年後 <b class="go">${oku(r.y5[1].R)}</b>${r.mult?'（'+num(r.mult,1)+'倍）':''}</div>
  ${[['弱気',0,'#7a8a9b'],['中立',1,''],['強気',2,'']].map(([nm,j,c])=>`<div class="cmp"><span>${nm} ${oku(r.y5[j].R)}（取り分 ${num(r.y5[j].s,2)}%）</span><div class="bar"><i style="width:${Math.max(1,r.y5[j].R/mx*100)}%${c?';background:'+c:''}"></i></div></div>`).join('')}
  <details><summary>根拠と前提を見る</summary>
@@ -493,6 +496,10 @@ function mkHtml(M){
  <p class="sub">残高の市場：XRPL の上の残高に対して、流動性として置かれる XRP の割合 <input type="number" step="any" min="0" data-c="liq" value="${M.liq}">%（貸し借りは 30% を XRP と置く）<br>
  取扱高の市場：XRPL の上の取扱高のうち、XRP を橋に使う割合 <input type="number" step="any" min="0" max="100" data-c="via" value="${M.via}">%、その XRP が1年に回る回数 <input type="number" step="1" min="1" data-c="turn" value="${M.turn}">回</p>
  <p>この3つの数字は、公式の実績がないので仮定です。ここを変えると、XRP で要る額が大きく変わります。機関投資家向けの預かり・プライムブローカーの市場は、定義がばらばらで比べられる数字が出せなかったので、入れていません。</p></details>
+ <details><summary>何が自動で更新されて、何がされないかを見る</summary>
+ <p><b>毎日、自動で更新されるもの</b>：XRP の値段と合図／ステーブルコインの市場と RLUSD の発行額／貸し借り・トークン化・ブリッジの市場の伸び／Flare の残高／XRPL の機能の投票／リップル社の新しい発表の一覧（段階の目安つき）／金融・AI の公式の配信／大口の動き。</p>
+ <p><b>お知らせが届くもの</b>：買い増しの合図が出た時・消えた時、リップル社の新しい発表が出た時（GitHub からメール）。</p>
+ <p><b>自動では変わらないもの</b>：市場の伸び率の予測（低・中立・高）と5年後の取り分、テーマの段階、機関が持つ XRP の量（推定 約17億）、XRP の必要量の3つの前提。新しい発表のお知らせが来たら、段階と前提を見直してください。予測の出どころ（調査会社の数字）は、数か月に1回、調べ直す必要があります。</p></details>
  <p class="note">市場の今の規模と予測は、2026-11-22 に調べた数字で、多くは報道やまとめを通した二次情報です。取り分が「仮定」の市場は、リップル社が年の数字を公表していない市場です。単位が市場ごとに違う（残高・取扱高・売上）ので、市場どうしを足してはいません。</p>`}
 function analyze2(S){
  const B=analyze(S),o=cfg.led||{};
@@ -899,7 +906,7 @@ document.addEventListener('click',async e=>{const t=e.target;
  else if(t.id==='exp'){const data={app:'xrp-accumulator',version:1,exported:new Date().toISOString(),cfg,hold,memo,fm,plan,snaps};
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,1)],{type:'application/json'}));a.download='xrp-accumulator-'+today()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$('fileMsg').textContent='書き出しました：'+a.download}
  else if(t.id==='reload'){const last=get('reloadAt',0);if(Date.now()-last<600e3){$('reloadMsg').textContent='取り直しは10分に1回までです';return}
-  set('reloadAt',Date.now());const y=new Date().getUTCFullYear();for(const k of['c.xrp_jpy.'+y,'c.btc_jpy.'+y,'fng','fund','xs','cg','ltvl','lstb','ldex','rl','fl','stAll','defi','am','press'])   /* world（配信のためた分）は消さない */{try{localStorage.removeItem(LS+k)}catch(e){}delete mem[k]}state.src={};load()}
+  set('reloadAt',Date.now());const y=new Date().getUTCFullYear();for(const k of['c.xrp_jpy.'+y,'c.btc_jpy.'+y,'fng','fund','xs','cg','ltvl','lstb','ldex','rl','fl','stAll','defi','am','press','mkj','cg2'])   /* world（配信のためた分）は消さない */{try{localStorage.removeItem(LS+k)}catch(e){}delete mem[k]}state.src={};load()}
 });
 let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(drawChart,150)});
 
@@ -930,6 +937,7 @@ async function load(){
    daily('am','xrpscan','https://api.xrpscan.com/api/v1/amendments',j=>j.map(a=>({n:String(a.name),e:!!a.enabled,c:+a.count||0,t:+a.threshold||0,s:!!a.supported,on:a.enabled_on?String(a.enabled_on).slice(0,10):''})),'XRPL の機能の投票（XRPScan）'),
    pressList()]);
   const world=await worldFeeds();
+  state.mkj=await daily('mkj','ghpages','https://chartforix-blip.github.io/xrp-accumulator/data/markets.json',j=>Array.isArray(j)?j.slice(-800).map(h=>({d:String(h.d),lend:+h.lend||0,rwa:+h.rwa||0,bridge:+h.bridge||0})):[],'市場の数字の毎日の記録（DefiLlama を GitHub が取得）');
   Object.assign(state,{rl,fl,stAll,defi,am,press,world,xt:ago90(ltvl)});
   const S=build(x,new Map(btc.map(r=>[r[0],r[3]])),new Map(fng||[]),{tvl:new Map(ltvl||[]),stb:new Map(lstb||[]),dex:new Map(ldex||[])});
   if(fund!=null)S.ind.fund[S.n-1]=fund;state.fund=fund;
