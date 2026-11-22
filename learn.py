@@ -2,18 +2,18 @@
 # 新しい発表を読み、解説と「考え方の段」を自動で書き直す（GitHub Actions で1日1回）。
 # 使う AI：Google Gemini の無料枠だけ。鍵は環境変数 GEMINI_API_KEY（GitHub の Secrets）。
 # 守ること：1回の実行で AI を呼ぶのは最大 MAX_CALLS 回。429 などのエラーが出たらそこで止め、前の内容を残す。
-import json, os, re, sys, html, datetime, urllib.request, urllib.error
+import json, os, re, sys, html, time, datetime, urllib.request, urllib.error
 
 KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 MODELS = ["gemini-4-hydrogen", "gemini-3.8-flash", "gemini-3.6-flash"]   # 無料枠のあるモデル（2026-11-23 公式の料金ページで確認）
 API = "https://generativelanguage.googleapis.com/v1beta/interactions"
-MAX_CALLS = 4          # 1回の実行で呼ぶ上限
+MAX_CALLS = 6          # 1回の実行で呼ぶ上限（やり直しを含む）
 MAX_NEW = 3            # 1回の実行で読む発表の上限
 SHOW = 40              # アプリが出す本数（新しい順）
 STATE = "data/auto.json"
 OUT = "analysis-auto.js"
 TH = ["bank", "pay", "multi", "inst", "rwa", "rlusd", "ai", "xrp", "other"]
-TODAY = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+TODAY = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=9)).strftime("%Y-%m-%d")   # 日本時間
 calls = 0
 stopped = ""
 
@@ -53,6 +53,13 @@ def ask(prompt, schema):
                 return None
             if e.code in (401, 403):
                 stopped = "鍵が使えない（%d）" % e.code
+                return None
+            if e.code >= 500:             # 混雑など：20秒待って1回だけやり直し、だめなら今日は止める
+                if not getattr(ask, "retried", False) and calls < MAX_CALLS:
+                    ask.retried = True
+                    time.sleep(20)
+                    return ask(prompt, schema)
+                stopped = "混雑（%d）。次の回にやり直します" % e.code
                 return None
             continue                      # 404 など：次のモデルを試す
         except Exception as e:
@@ -126,8 +133,7 @@ def press_list():
             continue
         d = re.search(r"<lastmod>(\d{4}-\d\d-\d\d)", u)
         items.append((d.group(1) if d else "", m.group(1)))
-    items.sort(reverse=True)
-    return items
+    return items          # 一覧は新しい順に並んでいる（lastmod は発表の日ではないので、並べ替えない）
 
 def builtin():
     try:
@@ -230,6 +236,12 @@ def main():
         log("GEMINI_API_KEY がありません。何もしないで終わります。")
         return
     items = press_list()[:SHOW]
+    if not items:
+        log("発表の一覧がありません。何もしないで終わります。")
+        return
+    keep = set(s for _, s in press_list()[:SHOW + 20])
+    S["deep"] = {k: v for k, v in S["deep"].items() if k in keep}      # 画面に出ない古い発表の分は持たない
+    S["skip"] = {k: v for k, v in S["skip"].items() if k in keep}
     have = builtin() | set(S["deep"].keys())
     todo = [(d, s) for d, s in items if s not in have and S["skip"].get(s, 0) < 3][:MAX_NEW]
     log("新しい発表：", len(todo), "本")
@@ -254,7 +266,6 @@ def main():
         if not o:
             S["skip"][slug] = S["skip"].get(slug, 0) + 1
             continue
-        o.setdefault("d", d)
         S["deep"][slug] = o
         added += 1
         log("解説を書きました：", slug)
