@@ -149,7 +149,8 @@ body:not([data-tab=more]) footer{display:none}
 .mrow>span{display:block;font-size:12.5px;color:var(--sub);line-height:1.6}
 .mrow>b{display:block;font-size:17px;line-height:1.5}
 .big.rs{justify-content:space-around;align-items:flex-start;gap:8px}
-.rn{width:98px;text-align:center}
+.rn{flex:1 1 0;min-width:0;text-align:center}
+.rn .rbl,.rn .sub{white-space:nowrap}
 .rn .ring{width:92px;height:92px}
 .rn.main{width:200px}
 .rn.main .ring{width:140px;height:140px}
@@ -586,7 +587,7 @@ function renderBiz2(){
  const rb=(v,label,c,wid,wv)=>`<div class="rn">${ring(v,label,c)}<div class="rbl">${label}</div><div class="sub">重み <b id="${wid}">${num(wv,0)}%</b></div></div>`;
  const col=v=>v>=65?'go':v>=40?'okc':'no',sel=(k,f,cur,arr,from)=>`<select data-led="${k}" data-f="${f}">${arr.map((x,i)=>i<from?'':`<option value="${i}" ${cur===i?'selected':''}>${x}</option>`).join('')}</select>`;
  const top=`<div class="big rs"><div class="rn main" id="lwRing">${ring(B.score,'事業の分析の点',col(B.score))}<div class="rbl"><b>事業の分析の点</b></div><div class="sub">下の3つを重みで合わせた点</div></div></div>
- <div class="big rs">${rb(B.mkt.score==null?0:B.mkt.score,'市場の伸び',col(B.mkt.score||0),'lwW1',wM)}${rb((B.ad+B.adF)/2,'許可・契約の段階',col(B.ad),'lwW2',wS)}${rb(B.lk,'XRP の量の確かさ',col(B.lk),'lwW3',B.linkW)}</div>
+ <div class="big rs">${rb(B.mkt.score==null?0:B.mkt.score,'市場の伸び',col(B.mkt.score||0),'lwW1',wM)}${rb((B.ad+B.adF)/2,'許可と契約',col(B.ad),'lwW2',wS)}${rb(B.lk,'XRP の確かさ',col(B.lk),'lwW3',B.linkW)}</div>
  <div class="sub" style="text-align:center;margin-top:6px">リップル社の市場（中立・5年）：<b class="go" style="font-size:16px">${B.mkt.gm==null?'—':num(B.mkt.gm,1)+' 倍'}</b></div>
  <div class="tc" style="margin-top:10px"><b>点の付け方を変える</b>
  <div class="sub" style="margin:4px 0">XRP が使われた量は、まだ公式の数字が出ていません。その弱みを、点にどれだけ入れるかを決めます。右へ動かすほど厳しく見て、点が下がります。</div>
