@@ -107,6 +107,13 @@ details>summary{color:#6cc8ff;font-size:14px;margin-top:10px}
 .rb{top:0;height:18px;background:linear-gradient(90deg,var(--acc),var(--go));border-radius:9px;opacity:.85}
 .rm{top:-3px;height:24px;width:4px;margin-left:-2px;background:#fff;border-radius:2px}
 .rc{top:-6px;height:30px;width:2px;margin-left:-1px;background:var(--no)}
+.tcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:12px}
+.tc{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:rgba(255,255,255,.035)}
+.tch{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.chip{font-size:12px;padding:2px 9px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.tc ul{margin:4px 0;padding-left:18px;font-size:13px}
+.tc details p{margin:6px 0;font-size:14px}
+.cmp{margin:8px 0}.cmp span{font-size:13px;color:var(--sub)}.cmp .bar{margin-top:3px}
 .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--sub)}
 .legend i{display:inline-block;width:14px;height:8px;border-radius:4px;margin-right:4px;vertical-align:middle}
 #noteBtn{font-size:13px;padding:4px 10px}
@@ -121,11 +128,12 @@ details p{margin:4px 0 2px}
 <div><span>XRP ACCUMULATOR</span><h1>XRP 買い増しの点数</h1></div>
 </div>
 <p class="note">指標の状態を見せる道具です。利益を約束するものではありません。</p>
-<div class="row"><span id="status" class="note">データを読み込んでいます…</span><button id="noteBtn" type="button">説明を表示</button></div>
+<div class="row"><span id="status" class="sub">データを読み込んでいます…</span><button id="noteBtn" type="button">説明を表示</button></div>
 </header>
 <main>
 <section id="sig"></section>
 <section id="now"></section>
+<section id="biz"></section>
 <section id="road"></section>
 <section id="hold"></section>
 <section id="fm" class="closed"></section>
@@ -161,10 +169,11 @@ const DEF={inds:[
  {k:'fng',g:'t',n:'恐怖と欲の指数',u:'',w:3,zero:75,full:20,d:0},
  {k:'rsid',g:'t',n:'日足 RSI（14）',u:'',w:2,zero:70,full:30,d:1},
  {k:'fund',g:'t',n:'資金調達率（直近7日の平均・8時間あたり）',u:'%',w:1,zero:0.03,full:-0.01,d:4},
- {k:'man',g:'f',n:'リップル社と XRP の材料（自分で付けた点）',u:'点',w:14,zero:0,full:100,d:0},
- {k:'stb',g:'f',n:'XRPL のステーブルコイン残高（RLUSD など）の90日の増減',u:'%',w:8,zero:-10,full:30,d:1},
- {k:'tvl',g:'f',n:'XRPL に預けられた資産の90日の増減（XRP の値動きを除く）',u:'%',w:6,zero:-20,full:30,d:1},
- {k:'dex',g:'f',n:'XRPL の DEX の出来高（直近30日 ÷ その前の90日）',u:'倍',w:4,zero:0.6,full:1.5,d:2},
+ {k:'biz',g:'f',n:'事業の勢い（公式発表と裏付けの数字から自動）',u:'点',w:14,zero:0,full:100,d:0},
+ {k:'man',g:'f',n:'リップル社と XRP の材料（自分で付けた点）',u:'点',w:8,zero:0,full:100,d:0},
+ {k:'stb',g:'f',n:'XRPL のステーブルコイン残高（RLUSD など）の90日の増減',u:'%',w:4,zero:-10,full:30,d:1},
+ {k:'tvl',g:'f',n:'XRPL に預けられた資産の90日の増減（XRP の値動きを除く）',u:'%',w:4,zero:-20,full:30,d:1},
+ {k:'dex',g:'f',n:'XRPL の DEX の出来高（直近30日 ÷ その前の90日）',u:'倍',w:2,zero:0.6,full:1.5,d:2},
  {k:'exch',g:'w',n:'取引所などの口座の残高の30日の増減（減る＝引き出されている）',u:'%',w:10,zero:5,full:-5,d:2},
  {k:'whale',g:'w',n:'大口の口座の残高の30日の増減（増える＝買い集めている）',u:'%',w:10,zero:-5,full:5,d:2}],
  strong:70,ok:50,minF:40,sigTh:40,budget:30000,mStrong:2,mOk:1,mSkip:0};
@@ -181,6 +190,7 @@ const HELP={
  fng:'暗号資産の市場全体の気分を0〜100で表す数字です。小さいほど、怖がっている人が多いです。',
  rsid:'直近14日の上げ幅と下げ幅の割合です。短い期間の売られすぎを見ます。',
  fund:'先物で、買い手が売り手に払う手数料の率です。マイナスの時は、売りに傾いています。',
+ biz:'リップル社の公式発表を8つのテーマに分け、発表の増え方と裏付けの数字を、XRP への結びつきの強さで重みを付けてまとめた点です。',
  man:'下の「材料を点にする」欄で自分が選んだ5項目の合計です。',
  stb:'XRPL の上にあるドル建てのステーブルコイン（RLUSD など）の残高が、90日前から何%増えたかです。決済に使われる量の目安です。',
  tvl:'XRPL の上のサービスに預けられた資産が、90日前から何%増えたかです。XRP の値段の上げ下げの分は除いています。',
@@ -190,7 +200,8 @@ const HELP={
 const FM=[['etf','ETF・投資商品への資金の出入り'],['reg','規制・法律（米国・日本）'],['biz','リップル社の提携・買収・免許'],['use','RLUSD・送金サービスの利用の広がり'],['risk','裁判・事故などの悪い材料（ない・解決＝良い）']];
 function loadCfg(){const c=get('cfg',null);const d=JSON.parse(JSON.stringify(DEF));if(!c||!Array.isArray(c.inds))return d;
  for(const i of d.inds){const s=c.inds.find(x=>x.k===i.k);if(s){for(const f of['w','zero','full'])if(isFinite(s[f]))i[f]=Number(s[f]);}}
- for(const f of['strong','ok','minF','sigTh','budget','mStrong','mOk','mSkip'])if(isFinite(c[f]))d[f]=Number(c[f]);return d}
+ for(const f of['strong','ok','minF','sigTh','budget','mStrong','mOk','mSkip'])if(isFinite(c[f]))d[f]=Number(c[f]);
+ if(c.link&&typeof c.link==='object'){d.link={};for(const k in c.link)if(isFinite(c.link[k]))d.link[String(k).replace(/\W/g,'')]=Number(c.link[k])}return d}
 let cfg=loadCfg();
 let fm=get('fm',{v:{},at:''});
 const fmScore=()=>{let s=50;for(const [k] of FM)s+=10*(+fm.v[k]||0);return s};
@@ -205,7 +216,8 @@ const state={S:null,src:{},fund:null};
 const blocked=get('blocked',{});
 async function getJSON(host,url,body){
  if(blocked[host]&&blocked[host]>Date.now())throw new Error('上限に当たったので止めています（'+new Date(blocked[host]).toLocaleString('ja-JP')+' まで）');
- const r=await fetch(url,body?{method:'POST',body:JSON.stringify(body)}:undefined);
+ let r,err;for(let k=0;k<3;k++){try{r=await fetch(url,body?{method:'POST',body:JSON.stringify(body)}:undefined);break}catch(e){err=e;await sleep(700*(k+1))}}   // 通信の失敗は3回までやり直す
+ if(!r)throw new Error('つながりませんでした（'+(err&&err.message||'通信の失敗')+'）');
  if(r.status===429||r.status===403){blocked[host]=Date.now()+6*3600e3;set('blocked',blocked);throw new Error('回数の上限（HTTP '+r.status+'）。6時間は呼びません')}
  if(!r.ok)throw new Error('HTTP '+r.status);
  return r.json();
@@ -263,10 +275,113 @@ async function whales(){
  }catch(e){state.src[label]={ok:false,msg:e.message+(c?'。前に取った数字（'+c.day+'）を使っています':'')};return c}
 }
 
+/* ---------- 事業の動きの分析（リップル社の公式発表 × 裏付けの数字） ---------- */
+const PRESS_URL='https://chartforix-blip.github.io/xrp-accumulator/data/press-release.xml';
+const PRESS0=`2026-10-29 ripple-and-waterorg-deepen-partnership-to-drive-global-access-to-safe-water
+2026-10-28 ripple-reports-banner-year-approaching-900m-product-revenue-run-rate-signs-multi-solution-partnerships
+2026-10-28 ripple-expands-collaboration-with-bny-across-custody-and-tokenized-trade-finance
+2026-10-28 ripple-and-coinbase-partner-to-expand-access-to-rlusd
+2026-10-27 c2fo-and-ripple-partner-to-modernize-trade-finance-using-the-xrp-ledger
+2026-10-27 ripple-and-robinhood-partner-to-power-the-next-generation-of-finance
+2026-10-26 ripple-receives-final-occ-approval-to-establish-national-trust-bank
+2026-10-26 ripple-treasury-introduces-always-on-corporate-treasury-platform-to-modernize-corporate-cash-management
+2026-10-26 aviva-investors-expands-its-tokenised-offering-with-the-launch-of-a-sterling-liquidity-fund-tokenised-share-class
+- ripple-launches-support-for-institutions-to-access-real-world-asset-perpetual-swaps
+- drivewealth-and-ripple-partner-to-bring-institutional-digital-asset-infrastructure-to-global-investing
+- ripple-and-meritz-securities-partner-to-bring-institutional-custody-and-tokenization-to-korea-s-capital-markets
+- standard-chartered-launches-rlusd-custody-and-joins-planned-collateral-integration-with-ripple-and-lmax-group
+- ripple-and-brevan-howard-deepen-relationship
+- csdbr-and-ripple-use-the-xrpl-blockchain-to-expand-brazils-financial-market-infrastructure
+- ripple-treasury-brings-industry-s-first-governed-ai-for-enterprise-treasury
+- ripple-prime-launches-delta-one-business-expanding-equity-derivatives-capabilities-for-institutional-clients
+- ripple-and-jeonbuk-bank-partner-to-modernize-cross-border-payments-for-korea-s-regional-banking-sector
+- ripple-prime-closes-275-million-senior-notes-offering
+- ripple-strengthens-digital-capital-markets-infrastructure-with-investments-in-zilo-and-licuido
+- ripple-receives-full-eu-mica-casp-license
+- ripple-and-sbi-group-partner-to-launch-ripple-usd-in-japan
+- ripple-secures-preliminary-MiCA-CASP-license
+- ripple-and-bitso-expand-partnership
+- ripple-expands-washington-dc-presence
+- new-partnerships-bring-rlusd-to-turkiye
+- ripple-prime-partners-with-edx-to-bridge-institutional-access-to-digital-asset-liquidity
+- ripple-prime-secures-usd200-million-debt-facility-from-neuberger-specialty-finance-to-expand-capacity
+- ripple-reinforces-commitment-to-the-middle-east-with-expanded-presence-in-the-uae
+- ripple-partners-with-kbank-to-deploy-scalable-digital-asset-wallet-infrastructure-through-ripple-custody
+- ripple-and-kyobo-life-insurance-partner-to-pioneer-korea-s-first-tokenised-government-bond-settlement-on-blockchain
+- ripple-treasury-launches-the-first-treasury-management-system-tms-with-native-digital-asset-capabilities
+- ripple-joins-monetary-authority-of-singapore-s-bloom-initiative-and-partners-with-unloq-to-advance-programmable-settlement-infrastructure-in-trade-finance
+- ripple-deepens-commitment-to-brazil-with-expanded-payments-offering-growing-customer-momentum-and-vasp-license-application
+- ripple-to-secure-australian-financial-services-license-expanding-payments-offering-across-apac
+- ripple-redefines-payments-with-end-to-end-stablecoin-platform-and-global-customer-momentum
+- aviva-investors-seeks-to-tokenise-products-on-the-xrp-ledger-in-collaboration-with-ripple
+- ripple-accelerates-institutional-custody-adoption-with-security-compliance-and-staking-capabilities
+- ripple-announces-support-for-hyperliquid-expanding-institutional-access-to-onchain-liquidity
+- ripple-receives-full-eu-electronic-money-institution-license-in-luxembourg
+- ripple-expands-european-regulatory-footprint-with-preliminary-emi-approval-in-luxembourg
+- ripple-receives-fca-permissions-to-scale-ripple-payments-in-the-uk
+- ripple-expands-partnership-with-tjm-to-enhance-institutional-trade-execution-and-clearing-services
+- ripple-payments-sees-first-european-bank-adoption-with-amina-bank
+- ripple-secures-federal-approval-to-establish-national-trust-bank
+- tech-against-scams-coalition-launches-scamberry-pie-to-spark-holiday-conversations-about-online-safety
+- redotpay-integrates-ripple-payments-to-extend-stablecoin-reach-and-launches-send-crypto-receive-ngn
+- ripple-expands-scope-of-payment-activities-in-singapore-for-its-major-payment-institution-license
+- rlusd-recognized-as-accepted-fiat-referenced-token-for-use-within-abu-dhabis-adgm
+- ripple-teams-up-with-mastercard-webbank-and-gemini
+- ripple-announces-500-million-strategic-investment-led-by-fortress-citadel-securities-valuing-the-company-at-40-billion-following-record-growth
+- ripple-acquires-palisade-to-offer-comprehensive-digital-asset-custody-solution
+- ripple-launches-digital-asset-spot-prime-brokerage-for-the-united-states-market
+- global-nonprofits-use-ripple-payments-rippleusd-to-move-money-faster-and-drive-real-world-impact
+- ripple-breaks-into-corporate-treasury-with-gtreasury-acquisition
+- ripple-expands-global-custody-footprint-into-africa-with-absa-bank
+- ripple-expands-into-the-kingdom-of-bahrain-through-strategic-partnership-with-bahrain-fintech-bay
+- ripple-and-securitize-enable-rlusd-smart-sontract-functionality-for-blackrock-buidl-and-vaneck-vbill-tokenized-funds
+- dbs-franklin-templeton-to-launch-trading-and-lending-solutions-tokenised-mmf-ripple-stablecoin-rlusd
+- ripple-commits-25-m-to-boost-american-small-businesses-and-veteran-career-success`.split('\n').map(l=>{const i=l.indexOf(' ');return {d:l.slice(0,i)==='-'?'':l.slice(0,i),s:l.slice(i+1)}});
+const THEMES=[
+ {k:'inst',n:'機関投資家・担保・預かり',l:1,re:/custody|prime|collateral|institution|brokerage|derivatives|perpetual|hedge|brevan|clearing|liquidity|lending|staking/i,soc:'機関投資家が、預かり・売買・担保の場所としてリップル社の仕組みを使います。',xr:'XRP が担保として預けられると、売られずに持たれる量が増えます。担保に入った量の数字は、まだ公表されていません。'},
+ {k:'xrp',n:'XRP・XRPL の機能',l:1,re:/xrp|xrpl/i,soc:'XRPL が、貸し借り・許可制の取引など、金融機関向けの機能を持ちます。',xr:'XRPL の上で XRP が貸し借りや流動性に使われます。レンディングの機能は投票中です。'},
+ {k:'bank',n:'銀行免許・各国の許可',l:.6,re:/occ|trust-bank|licen[sc]e|mica|emi-|fca|permissions|approval|regulat|vasp|charter|recognized|dfsa|adgm/i,soc:'銀行と同じ決まりの中で、預かりと決済ができるようになります。',xr:'金融機関が使える前提が整います。XRP を使うかどうかは、別に確かめる必要があります。'},
+ {k:'pay',n:'決済・送金・企業の資金管理',l:.6,re:/payment|cross-border|remittance|treasury|cash-management|trade-finance|payout|settlement/i,soc:'企業や銀行の送金・資金管理・貿易金融に入ります。',xr:'XRP を橋に使う送金だけが、XRP の需要になります。ステーブルコインで送る分は XRP を使いません。'},
+ {k:'multi',n:'マルチチェーン・ブリッジ',l:.6,re:/bridge|evm|cross-chain|multichain|interoperab|wormhole|axelar|chainlink|hyperliquid|coinbase|ethereum|solana|defi|onchain/i,soc:'XRP と RLUSD が、ほかのチェーン（Flare・イーサリアムなど）でも使えます。',xr:'ほかのチェーンで XRP が預けられると、持たれる量が増えます。XRPL EVM サイドチェーンは、まだほとんど使われていません。'},
+ {k:'rwa',n:'資産のトークン化',l:.3,re:/tokeni[sz]|real-world-asset|money-market|mmf|treasuries|treasury-bills|government-bond|liquidity-fund|digital-paper|private-credit|capital-markets/i,soc:'国債・MMF・社債などを XRPL の上で発行して決済します。',xr:'XRPL の利用は増えますが、手数料で消える XRP は少なく、XRP の需要には結びつきにくいです。'},
+ {k:'rlusd',n:'ステーブルコイン RLUSD',l:.3,re:/rlusd|ripple-usd|rippleusd|stablecoin/i,soc:'ドルと同じ値段の RLUSD が、決済と担保に使われます。',xr:'発行額の多くはイーサリアムの上にあり、その分は XRP を使いません。'},
+ {k:'ai',n:'AI エージェント',l:.3,re:/(^|-)ai(-|$)|agent|artificial|machine-learning/i,soc:'AI が人の代わりに支払いや運用をする時の、通貨とネットワークに使われます。',xr:'今は実績がとても小さいです（2026-11 に調べた時点）。AI による運用の代行は、まだ構想の段階です。'}];
+async function pressList(){
+ const label='リップル社の公式発表の一覧';let c=get('press',null);
+ if(!c||c.day!==today()){
+  try{const r=await fetch(PRESS_URL,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);const t=await r.text();
+   const u=[...t.matchAll(/<url>([\s\S]*?)<\/url>/g)].map(m=>({loc:(m[1].match(/<loc>([^<]+)/)||[])[1]||'',mod:(m[1].match(/<lastmod>([^<]+)/)||[])[1]||''})).filter(x=>/ripple-press\/[^/]+\/?$/.test(x.loc));
+   if(u.length<20)throw new Error('中身が足りません');u.sort((a,b)=>b.mod<a.mod?-1:b.mod>a.mod?1:0);
+   c={day:today(),at:Date.now(),list:u.slice(0,90).map(x=>({d:x.mod>'2026-10-16'?x.mod.slice(0,10):'',s:x.loc.replace(/^.*ripple-press\//,'').replace(/\/$/,'').replace(/[^\w-]/g,'')}))};set('press',c)}
+  catch(e){state.src[label]={ok:false,msg:e.message+'。'+(c?'前に取った一覧を使っています':'2026-11-22 時点の一覧を使っています')};return c?c.list:PRESS0}}
+ state.src[label]={ok:true,msg:'取得 '+new Date(c.at).toLocaleString('ja-JP')};return c.list}
+function analyze(S){
+ const list=(state.press||PRESS0).filter(x=>!/-(ja|ko|kr|pt)$/.test(x.s)),rec=list.slice(0,30),old=list.slice(30,60),am=state.am||[],i=S.n-1;
+ const g=o=>o&&o.ago>0?(o.now-o.ago)/o.ago*100:null,lin=(v,z,f)=>v==null?null:Math.max(0,Math.min(100,(v-z)/(f-z)*100));
+ const lend=am.find(a=>a.n==='LendingProtocol'),yr=new Date(Date.now()-365*864e5).toISOString().slice(0,10);
+ const newF=am.filter(a=>a.e&&a.on>=yr&&!/^fix/.test(a.n));
+ const rel=g(state.rl)==null?null:g(state.rl)-(g(state.stAll)||0);   // RLUSD は市場全体より速く伸びているか
+ const NU={rlusd:lin(rel,-10,30),multi:lin(g(state.fl)==null?null:g(state.fl)-(g(state.defi)||0),-20,30),rwa:sc(S.ind.tvl[i],cfg.inds.find(d=>d.k==='tvl')),inst:lend?(lend.e?100:lend.c/lend.t*80):null,xrp:am.length?Math.min(100,newF.length*15):null};
+ const ev={rlusd:state.rl?'RLUSD の発行額 '+num0(state.rl.now/1e8)+'億ドル（90日で '+pm(g(state.rl))+'）。うち XRPL の上は '+num(state.rl.xrpl/state.rl.now*100,0)+'%':'',
+  multi:state.fl?'Flare に預けられた資産 '+num0(state.fl.now/1e8)+'億ドル（90日で '+pm(g(state.fl))+'）':'',
+  rwa:S.ind.tvl[i]!=null?'XRPL に預けられた資産（XRP の値動きを除く）90日で '+pm(S.ind.tvl[i]):'',
+  inst:lend?'レンディングの機能の投票 '+(lend.e?'有効になった':lend.c+' / '+lend.t+' 票'):'',
+  xrp:am.length?'この1年で有効になった新機能 '+newF.length+' 個':''};
+ let sw=0,ss=0;const th=THEMES.map(t=>{const hit=x=>t.re.test(x.s),n=rec.filter(hit).length,p=old.filter(hit).length;
+  const sAnn=Math.max(0,Math.min(100,n*10+(n>p?15:n<p?-10:0))),sNum=NU[t.k]==null?null:NU[t.k],score=sNum==null?Math.min(60,sAnn):(sAnn+sNum)/2;
+  const l=(cfg.link&&isFinite(cfg.link[t.k]))?+cfg.link[t.k]:t.l;sw+=l;ss+=l*score;
+  return Object.assign({},t,{cnt:n,p,sAnn,sNum,score,l,ev:ev[t.k]||'',stage:sNum!=null&&sNum>=50?'数字が出ている':n>0?'発表が先行':'動きなし',heads:rec.filter(hit).slice(0,4)})});
+ // 世の中の流れ（市場全体）との比べ
+ const xt=state.xt,mk=[
+  {n:'ステーブルコイン',mn:'市場全体',mg:g(state.stAll),rn:'RLUSD',rg:g(state.rl),share:state.stAll&&state.rl?state.rl.now/state.stAll.now*100:null,sn:'RLUSD の市場での割合'},
+  {n:'DeFi（預けられた資産）',mn:'全チェーン',mg:g(state.defi),rn:'XRPL',rg:g(xt),share:state.defi&&xt?xt.now/state.defi.now*100:null,sn:'XRPL の割合'}];
+ return {th,score:sw?ss/sw:null,mk}}
+const num0=v=>num(v,1),pm=v=>v==null?'—':(v>=0?'+':'')+num(v,0)+'%';
+
 /* ---------- 指標 ---------- */
 function build(x,btcMap,fngMap,ext){
  const n=x.length,ts=x.map(r=>r[0]),c=x.map(r=>r[3]),h=x.map(r=>r[1]);
- const A=()=>new Array(n).fill(null);const ind={dd:A(),ma:A(),rsiw:A(),fng:A(),rsid:A(),pos:A(),btc:A(),fund:A(),man:A(),stb:A(),tvl:A(),dex:A(),exch:A(),whale:A(),val:A()};
+ const A=()=>new Array(n).fill(null);const ind={dd:A(),ma:A(),rsiw:A(),fng:A(),rsid:A(),pos:A(),btc:A(),fund:A(),man:A(),biz:A(),stb:A(),tvl:A(),dex:A(),exch:A(),whale:A(),val:A()};
  const D=864e5,stb=ext.stb,tvl=ext.tvl,dex=ext.dex,R=[];
  for(let i=90;i<n;i++){const t=ts[i];
   // 利用の大きさ＝ステーブルコイン残高・預けられた資産・DEX の30日平均の出来高 の相乗平均
@@ -347,6 +462,7 @@ function signals(S,start){const i=S.n-1;return [{name:'（比べる相手）い�
 function renderAll(){
  const S=state.S;if(!S){return}
  const i=S.n-1,price=S.c[i];S.ind.man[i]=fmScore();
+ state.biz=analyze(S);S.ind.biz[i]=state.biz.score;
  const s=total(S,i),bt=backtest(S);state.bt=bt;state.price=price;
  const gs={p:total(S,i,'p'),f:total(S,i,'f'),w:total(S,i,'w'),t:total(S,i,'t')};
  let b=band(s),down=false;if(b&&gs.f!=null&&gs.f<cfg.minF){down=true;b=b==='strong'?'ok':'skip'}
@@ -386,7 +502,35 @@ function renderAll(){
  ${GO.map(g=>`<tr><td colspan="6"><b>${GN[g]}：${gs[g]==null?'—':num(gs[g],0)+' 点'}</b></td></tr>`+cfg.inds.filter(d=>d.g===g).map(line).join('')).join('')}
  <tr><td><b>総合点</b></td><td></td><td></td><td></td><td>${sw}</td><td><b>${s==null?'—':num(s,1)}</b></td></tr></table></div>
  <p class="note">点数は「0点の値」から「100点の値」までをまっすぐ結んで出します。取れていない指標は外し、残りの重みで計算します。</p>`;
- renderFm();renderHold();renderRoad();renderTest();renderConf();renderRef();renderFile();renderSrc();
+ renderBiz();renderFm();renderHold();renderRoad();renderTest();renderConf();renderRef();renderFile();renderSrc();
+}
+function renderBiz(){
+ const B=state.biz;if(!B||!$('biz'))return;const am=state.am||[];
+ const chip={'数字が出ている':'go','発表が先行':'okc','動きなし':'no'},LN=v=>v>=1?'強':v>=.6?'中':'弱';
+ const AN={LendingProtocol:'レンディング（貸し借り）',SingleAssetVault:'資産を預ける金庫',ConfidentialTransfer:'金額を隠せる送金',DynamicMPT:'中身を変えられるトークン',Sponsor:'手数料の肩代わり',XChainBridge:'チェーン間のブリッジ',Batch:'まとめて実行',PermissionDelegation:'権限の委任'};
+ const pend=am.filter(a=>!a.e&&a.s&&AN[a.n]&&a.t>0).sort((a,b)=>b.c/b.t-a.c/a.t);
+ const title=s=>esc(s.replace(/-/g,' ').replace(/^./,c=>c.toUpperCase()));
+ const up=B.th.filter(t=>t.cnt>t.p).map(t=>t.n),gap=B.th.filter(t=>t.stage==='発表が先行'&&t.l>=.6).map(t=>t.n);
+ $('biz').innerHTML=`<h2>事業の動きの分析（公式発表から自動）</h2>
+ <div class="big"><svg class="ring ${B.score>=60?'go':B.score>=40?'okc':'no'}" viewBox="0 0 136 136" role="img" aria-label="事業の勢い ${num(B.score,0)}点"><circle cx="68" cy="68" r="56" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="10"/><circle cx="68" cy="68" r="56" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(B.score||0)/100*351.9} 351.9" transform="rotate(-90 68 68)"/><text x="68" y="76" text-anchor="middle" font-size="42" font-weight="700" fill="currentColor">${num(B.score,0)}</text><text x="68" y="98" text-anchor="middle" font-size="13" fill="#93a4b8">事業の勢い</text></svg>
+ <div><div class="sub">発表が増えているテーマ</div><div><b>${up.length?up.join('、'):'なし'}</b></div>
+ <div class="sub" style="margin-top:6px">発表はあるが、数字がまだ伴っていないテーマ</div><div><b>${gap.length?gap.join('、'):'なし'}</b></div></div></div>
+ <div class="tcs">${B.th.map(t=>`<div class="tc"><div class="tch"><b>${t.n}</b><span class="chip ${chip[t.stage]}">${t.stage}</span></div>
+ <div class="bar"><i style="width:${t.score}%"></i></div>
+ <div class="sub">発表 ${t.cnt}本（前は ${t.p}本）・XRP への結びつき <b>${LN(t.l)}</b></div>
+ <details><summary>くわしく</summary>
+ <p><b>社会との結びつき</b>：${t.soc}</p><p><b>XRP との結びつき</b>：${t.xr}</p>
+ ${t.ev?`<p><b>裏付けの数字</b>：${esc(t.ev)}</p>`:'<p><b>裏付けの数字</b>：自動で取れる数字がありません（発表の本数だけで見ています。上限60点）</p>'}
+ ${t.heads.length?'<p><b>新しい発表</b></p><ul>'+t.heads.map(h=>`<li><a href="https://ripple.com/ripple-press/${esc(h.s)}/" target="_blank" rel="noopener">${title(h.s)}</a>${h.d?'（'+esc(h.d)+'）':''}</li>`).join('')+'</ul>':''}
+ <label class="sub">XRP への結びつきの見方を変える <select data-link="${t.k}">${[[1,'強'],[.6,'中'],[.3,'弱']].map(([v,x])=>`<option value="${v}" ${t.l===v?'selected':''}>${x}</option>`).join('')}</select></label></details></div>`).join('')}</div>
+ <h3>世の中の流れとの比べ（90日の伸び）</h3>
+ ${B.mk.map(m=>`<div class="rg"><div class="rgh"><b>${m.n}</b><span>${m.rg==null||m.mg==null?'データなし':m.rg>m.mg?'<b class="go">市場より速い</b>':'<b class="no">市場より遅い</b>'}${m.share==null?'':'　'+m.sn+' '+num(m.share,2)+'%'}</span></div>
+ <div class="cmp"><span>${m.mn} ${pm(m.mg)}</span><div class="bar"><i style="width:${Math.max(0,Math.min(100,(m.mg||0)+30))}%;background:#7a8a9b"></i></div></div>
+ <div class="cmp"><span>${m.rn} ${pm(m.rg)}</span><div class="bar"><i style="width:${Math.max(0,Math.min(100,(m.rg||0)+30))}%"></i></div></div></div>`).join('')}
+ <p class="note">AI エージェントの支払いの市場は、無料で自動で取れる数字が見つかっていないので、ここには入れていません。</p>
+ <h3>XRPL の新しい機能の投票（必要な票に届くと有効になる）</h3>
+ ${pend.length?pend.map(a=>`<div class="cmp"><span>${AN[a.n]}　${a.c} / ${a.t} 票</span><div class="bar"><i style="width:${Math.min(100,a.c/a.t*100)}%"></i></div></div>`).join(''):'<p class="sub">投票中の機能のデータがありません</p>'}
+ <p class="note">発表は、リップル社のサイトの発表ページの一覧から、題名の言葉でテーマに分けています。新しい30本とその前の30本を比べ、裏付けの数字がある時は半分ずつで点にします。事業の勢いは、XRP への結びつきの強さで重みを付けた平均です。発表の一覧：${esc((state.src['リップル社の公式発表の一覧']||{}).msg||'')}</p>`;
 }
 function renderFm(){
  const old=fm.at?Math.floor((Date.now()-new Date(fm.at).getTime())/864e5):null;
@@ -556,6 +700,7 @@ document.addEventListener('change',e=>{const t=e.target;
  else if(t.dataset.h){const v=parseFloat(t.value);hold[t.dataset.h]=isFinite(v)?v:0;set('hold',hold);renderHold();renderRoad()}
  else if(t.dataset.p){let v=parseFloat(t.value);if(isFinite(v)){if(t.dataset.p==='years')v=Math.max(1,Math.min(30,Math.round(v)));plan[t.dataset.p]=v;set('plan',plan);renderRoad()}}
  else if(t.id==='memo'){memo=t.value;set('memo',memo)}
+ else if(t.dataset.link){cfg.link=cfg.link||{};cfg.link[t.dataset.link]=+t.value;set('cfg',cfg);renderAll()}
  else if(t.dataset.fm){fm.v[t.dataset.fm]=+t.value;fm.at=today();set('fm',fm);renderAll()}
  else if(t.id==='imp'&&t.files[0]){const fr=new FileReader();fr.onload=()=>{try{const j=JSON.parse(fr.result);if(j.app!=='xrp-accumulator')throw new Error('このツールのファイルではありません');
    if(j.cfg){set('cfg',j.cfg);cfg=loadCfg()}if(j.hold){hold=j.hold;if(!Array.isArray(hold.buys))hold.buys=[];set('hold',hold)}if(typeof j.memo==='string'){memo=j.memo;set('memo',memo)}if(j.plan&&typeof j.plan==='object'){plan=Object.assign({},PLAN0);for(const k of['goal','years','bear','base','bull','reinvest'])if(isFinite(j.plan[k]))plan[k]=Number(j.plan[k]);plan.events=Array.isArray(j.plan.events)?j.plan.events.map(x=>({id:String(x.id),d:String(x.d),t:String(x.t)})):[];set('plan',plan)}if(j.fm&&j.fm.v){fm={v:j.fm.v,at:String(j.fm.at||'')};set('fm',fm)}if(j.snaps&&typeof j.snaps==='object'){snaps=j.snaps;set('snaps',snaps)}
@@ -564,6 +709,7 @@ document.addEventListener('change',e=>{const t=e.target;
 function noteMode(on){document.body.classList.toggle('notes',on);$('noteBtn').textContent=on?'説明を隠す':'説明を表示'}
 noteMode(get('notes',false));
 document.addEventListener('click',async e=>{const t=e.target;
+ if(t.id==='retry'){state.src={};load();return}
  if(t.id==='noteBtn'){const on=!document.body.classList.contains('notes');set('notes',on);noteMode(on);return}
  if(t.tagName==='H2'&&t.parentElement.tagName==='SECTION'){t.parentElement.classList.toggle('closed');if(t.parentElement.id==='test')drawChart();return}
  if(t.id==='bAdd'){const q=parseFloat($('bQty').value),p=parseFloat($('bPrice').value);if(!(q>0)||!(p>0)){alert('数量と買値を入れてください');return}
@@ -576,7 +722,7 @@ document.addEventListener('click',async e=>{const t=e.target;
  else if(t.id==='exp'){const data={app:'xrp-accumulator',version:1,exported:new Date().toISOString(),cfg,hold,memo,fm,plan,snaps};
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,1)],{type:'application/json'}));a.download='xrp-accumulator-'+today()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$('fileMsg').textContent='書き出しました：'+a.download}
  else if(t.id==='reload'){const last=get('reloadAt',0);if(Date.now()-last<600e3){$('reloadMsg').textContent='取り直しは10分に1回までです';return}
-  set('reloadAt',Date.now());const y=new Date().getUTCFullYear();for(const k of['c.xrp_jpy.'+y,'c.btc_jpy.'+y,'fng','fund','xs','cg','ltvl','lstb','ldex']){try{localStorage.removeItem(LS+k)}catch(e){}delete mem[k]}state.src={};load()}
+  set('reloadAt',Date.now());const y=new Date().getUTCFullYear();for(const k of['c.xrp_jpy.'+y,'c.btc_jpy.'+y,'fng','fund','xs','cg','ltvl','lstb','ldex','rl','fl','stAll','defi','am','press']){try{localStorage.removeItem(LS+k)}catch(e){}delete mem[k]}state.src={};load()}
 });
 let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(drawChart,150)});
 
@@ -596,6 +742,15 @@ async function load(){
    daily('ltvl','llama','https://api.llama.fi/v2/historicalChainTvl/XRPL',j=>j.map(d=>[d.date*1000,Math.round(d.tvl)]),'XRPL に預けられた資産（DefiLlama）'),
    daily('lstb','llama','https://stablecoins.llama.fi/stablecoincharts/XRPL',j=>j.map(d=>[d.date*1000,Math.round((d.totalCirculatingUSD&&d.totalCirculatingUSD.peggedUSD)||0)]),'XRPL のステーブルコイン残高（DefiLlama）'),
    daily('ldex','llama','https://api.llama.fi/overview/dexs/XRPL?excludeTotalDataChart=false&excludeTotalDataChartBreakdown=true',j=>(j.totalDataChart||[]).map(d=>[d[0]*1000,Math.round(d[1])]),'XRPL の DEX の出来高（DefiLlama）')]);
+  const ago90=a=>{if(!a||a.length<95)return null;return {now:a[a.length-1][1],ago:a[a.length-91][1]}};
+  const [rl,fl,stAll,defi,am,press]=await Promise.all([
+   daily('rl','llama','https://stablecoins.llama.fi/stablecoin/250',j=>{let now=0,ago=0,xrpl=0;const cut=Date.now()/1000-90*86400;for(const [ch,v] of Object.entries(j.chainBalances||{})){const tk=v.tokens||[];if(!tk.length)continue;const val=t=>(t.circulating&&t.circulating.peggedUSD)||0,last=val(tk[tk.length-1]);now+=last;if(ch==='XRPL')xrpl=last;let a=0;for(const t of tk){if(t.date<=cut)a=val(t);else break}ago+=a}return {now,ago,xrpl}},'RLUSD の発行額（DefiLlama）'),
+   daily('fl','llama','https://api.llama.fi/v2/historicalChainTvl/Flare',j=>ago90(j.map(d=>[d.date,d.tvl])),'Flare に預けられた資産（DefiLlama）'),
+   daily('stAll','llama','https://stablecoins.llama.fi/stablecoincharts/all',j=>ago90(j.map(d=>[+d.date,(d.totalCirculatingUSD&&d.totalCirculatingUSD.peggedUSD)||0])),'ステーブルコインの市場全体（DefiLlama）'),
+   daily('defi','llama','https://api.llama.fi/v2/historicalChainTvl',j=>ago90(j.map(d=>[d.date,d.tvl])),'DeFi の市場全体（DefiLlama）'),
+   daily('am','xrpscan','https://api.xrpscan.com/api/v1/amendments',j=>j.map(a=>({n:String(a.name),e:!!a.enabled,c:+a.count||0,t:+a.threshold||0,s:!!a.supported,on:a.enabled_on?String(a.enabled_on).slice(0,10):''})),'XRPL の機能の投票（XRPScan）'),
+   pressList()]);
+  Object.assign(state,{rl,fl,stAll,defi,am,press,xt:ago90(ltvl)});
   const S=build(x,new Map(btc.map(r=>[r[0],r[3]])),new Map(fng||[]),{tvl:new Map(ltvl||[]),stb:new Map(lstb||[]),dex:new Map(ldex||[])});
   if(fund!=null)S.ind.fund[S.n-1]=fund;state.fund=fund;
   if(xs&&xs.date){snaps[xs.date]=Object.assign(snaps[xs.date]||{},{tx:xs.tx,pay:xs.pay,act:xs.act},cg?{supply:cg}:{});set('snaps',snaps)}
@@ -607,7 +762,8 @@ async function load(){
   renderAll();
   const bad=Object.values(state.src).filter(v=>!v.ok).length;
   $('status').textContent='表示：'+new Date().toLocaleString('ja-JP')+(bad?'　取れなかったデータが '+bad+' つあります（下の「データの出どころ」を見てください）':'');
- }catch(e){$('status').innerHTML='<span class="bad">データを取れませんでした：'+esc(e.message)+'。ネットにつながっているか確かめて、時間をおいて開き直してください。</span>'}
+ }catch(e){const local=!/^https?:$/.test(location.protocol);
+  $('status').innerHTML='<span class="bad">データを取れませんでした：'+esc(e.message)+'。'+(local?'この画面はネットにつながらないプレビューの可能性があります。https://chartforix-blip.github.io/xrp-accumulator/ を開いてください。':'電波の良い所で、下のボタンを押してください。')+'</span> <button id="retry" type="button">もう一度取りに行く</button>'}
 }
 load();
 </script>
