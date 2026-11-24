@@ -4,10 +4,10 @@
 	<cf:treatAs>list</cf:treatAs>
 
                                 <generator>Rhythmyx</generator>
-		<pubdate>22 Nov 2026 20:48:18 -0500</pubdate>
+		<pubdate>24 Nov 2026 16:06:33 -0500</pubdate>
 <title>OCC News</title>
 <description></description>
-<link>/rss/occ_news.xml</link>
+<link>/rss/occ_news.xml?utm_source=RSS_feed&amp;utm_medium=RSS</link>
 <managingeditor>Office of the Comptroller of the Currency</managingeditor>
 <category>		    		
 									
@@ -19,6 +19,34 @@
 <geography></geography>
 <webmaster>webmaster@occ.treas.gov</webmaster>
 <item>
+		<title>OCC Announces Enforcement Actions for November 2026</title>
+		<description>The Office of the Comptroller of the Currency (OCC) today released enforcement actions for November 2026.</description>
+			<pubDate>24 Nov 2026 16:00:00 -0500</pubDate>
+		<link>https://www.occ.gov/news-issuances/news-releases/2026/nr-occ-2026-104.html</link>
+		<author>Office of the Comptroller of the Currency</author>			
+		<category>		    		
+									
+			
+												Enforcement Actions
+		
+</category>
+		<source url="https://www.occ.gov">Office of the Comptroller of the Currency</source>
+</item>
+   <item>
+		<title>OCC Issues First and Second Quarter 2027 CRA Evaluation Schedule</title>
+		<description>The Office of the Comptroller of the Currency (OCC) today released its schedule of Community Reinvestment Act (CRA) evaluations to be conducted in the first and second quarters of 2027.</description>
+			<pubDate>24 Nov 2026 13:00:00 -0500</pubDate>
+		<link>https://www.occ.gov/news-issuances/news-releases/2026/nr-occ-2026-103.html</link>
+		<author>Office of the Comptroller of the Currency</author>			
+		<category>		    		
+									
+			
+												Community Reinvestment Act (CRA)
+		
+</category>
+		<source url="https://www.occ.gov">Office of the Comptroller of the Currency</source>
+</item>
+   <item>
 		<title>Comptroller Gould Emphasizes OCC&#8217;s Continued Momentum to Rightsize Regulation and Reform Federal Banking System</title>
 		<description>Comptroller of the Currency Jonathan V. Gould today discussed the Office of the Comptroller of the Currency&apos;s accelerated pace of execution and continued efforts to reform bank supervision, open the federal banking system to new entrants, and embrace responsible innovation to drive economic growth and deliver for the American people in remarks at the Exchequer Club.</description>
 			<pubDate>18 Nov 2026 13:45:00 -0500</pubDate>
@@ -128,34 +156,6 @@ The federal bank regulatory agencies, as members of the Federal Financial Instit
 									
 			
 																				Laws &amp; Regulations, OCC Regulations
-		
-</category>
-		<source url="https://www.occ.gov">Office of the Comptroller of the Currency</source>
-</item>
-   <item>
-		<title>Comptroller Gould Discusses Efforts to Support Community Banks</title>
-		<description>Comptroller of the Currency Jonathan V. Gould today discussed the Office of the Comptroller of the Currency&apos;s (OCC) work to help community banks thrive and remain dynamic as the financial industry evolves in remarks before the Ohio Bankers League. </description>
-			<pubDate>27 Oct 2026 14:00:00 -0400</pubDate>
-		<link>https://www.occ.gov/news-issuances/news-releases/2026/nr-occ-2026-94.html</link>
-		<author>Office of the Comptroller of the Currency</author>			
-		<category>		    		
-									
-			
-																				Community Bank, Genius Act
-		
-</category>
-		<source url="https://www.occ.gov">Office of the Comptroller of the Currency</source>
-</item>
-   <item>
-		<title>OCC Announces Enforcement Actions for October 2026</title>
-		<description>The Office of the Comptroller of the Currency (OCC) today released enforcement actions for October 2026.</description>
-			<pubDate>22 Oct 2026 11:00:00 -0400</pubDate>
-		<link>https://www.occ.gov/news-issuances/news-releases/2026/nr-occ-2026-93.html</link>
-		<author>Office of the Comptroller of the Currency</author>			
-		<category>		    		
-									
-			
-												Enforcement Actions
 		
 </category>
 		<source url="https://www.occ.gov">Office of the Comptroller of the Currency</source>

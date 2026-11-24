@@ -9,6 +9,17 @@
     <link>https://stripe.com/blog</link>
     <description>The Stripe Blog</description>
     <item>
+      <title>Custom software, specialized workflows, and other new growth paths from SaaS Platform Summit</title>
+      <link>https://stripe.com/blog/custom-software-specialized-workflows-and-other-new-growth-paths-from-saas-platform-summit</link>
+      <description>SaaS platforms have long built for specific verticals. Now AI makes it practical to build for one merchant. At Stripe’s SaaS Platform Summit, founders and operators shared how custom software and embedded finance can open new revenue streams.</description>
+      <enclosure url="https://images.ctfassets.net/fzn2n1nzq965/2VQwjZZHl48BCHyfxZB5XQ/8437782cb9d02f2a69bad2801b05f81e/Option_2_Index.jpg"
+        length="1250714"
+        type="image/jpeg"/>
+      <pubDate>Mon, 23 Nov 2026 00:00:00 +0000</pubDate>
+      <guid isPermaLink="true">https://stripe.com/blog/custom-software-specialized-workflows-and-other-new-growth-paths-from-saas-platform-summit</guid>
+      <dc:date>2026-11-23T00:00:00+00:00</dc:date>
+    </item>
+    <item>
       <title>Give your agents controlled access to analyze your data and move funds</title>
       <link>https://stripe.com/blog/give-your-agents-controlled-access-to-analyze-your-data-and-move-funds</link>
       <description>Stripe Treasury now lets agents transfer funds, convert currencies, and pay vendors within limits you set. Give agents the access they need to help run your business, with customizable controls and human approvals.</description>
@@ -106,17 +117,6 @@
       <pubDate>Tue, 13 Oct 2026 00:00:00 +0000</pubDate>
       <guid isPermaLink="true">https://stripe.com/blog/economics-of-ai-monetization</guid>
       <dc:date>2026-10-13T00:00:00+00:00</dc:date>
-    </item>
-    <item>
-      <title>Why I tried to kill token billing (and why we kept it)</title>
-      <link>https://stripe.com/blog/where-pricing-is-headed</link>
-      <description>Token billing is useful infrastructure, but usually a bad customer-facing pricing model. Your invoice should define the value your product delivers, not break down what it cost you to create it.</description>
-      <enclosure url="https://images.ctfassets.net/fzn2n1nzq965/429O97zRn17cvoY9EQIuoO/17adb35450f60d6ddd613c04cca873f4/1250x1250.jpg"
-        length="1025043"
-        type="image/jpeg"/>
-      <pubDate>Thu, 01 Oct 2026 00:00:00 +0000</pubDate>
-      <guid isPermaLink="true">https://stripe.com/blog/where-pricing-is-headed</guid>
-      <dc:date>2026-10-01T00:00:00+00:00</dc:date>
     </item>
   </channel>
 </rss>
