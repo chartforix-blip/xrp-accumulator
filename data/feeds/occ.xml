@@ -4,7 +4,7 @@
 	<cf:treatAs>list</cf:treatAs>
 
                                 <generator>Rhythmyx</generator>
-		<pubdate>24 Nov 2026 16:06:33 -0500</pubdate>
+		<pubdate>25 Nov 2026 15:55:41 -0500</pubdate>
 <title>OCC News</title>
 <description></description>
 <link>/rss/occ_news.xml?utm_source=RSS_feed&amp;utm_medium=RSS</link>
@@ -19,6 +19,20 @@
 <geography></geography>
 <webmaster>webmaster@occ.treas.gov</webmaster>
 <item>
+		<title>Agencies Announce Dollar Thresholds for Smaller Loan Exemption from Appraisal Requirements for Higher-priced Mortgage Loans</title>
+		<description>The Consumer Financial Protection Bureau, the Federal Reserve Board, and the Office of the Comptroller of the Currency today announced that the 2027 threshold for higher-priced mortgage loans that are subject to special appraisal requirements will increase from $34,200 to $35,500.</description>
+			<pubDate>25 Nov 2026 15:00:00 -0500</pubDate>
+		<link>https://www.occ.gov/news-issuances/news-releases/2026/nr-ia-2026-105.html</link>
+		<author>Office of the Comptroller of the Currency</author>			
+		<category>		    		
+									
+			
+																																				Appraisals, Credit, Mortgage Banking / Residential Lending, Retail Credit
+		
+</category>
+		<source url="https://www.occ.gov">Office of the Comptroller of the Currency</source>
+</item>
+   <item>
 		<title>OCC Announces Enforcement Actions for November 2026</title>
 		<description>The Office of the Comptroller of the Currency (OCC) today released enforcement actions for November 2026.</description>
 			<pubDate>24 Nov 2026 16:00:00 -0500</pubDate>
@@ -142,20 +156,6 @@ The federal bank regulatory agencies, as members of the Federal Financial Instit
 									
 			
 												Community Reinvestment Act (CRA)
-		
-</category>
-		<source url="https://www.occ.gov">Office of the Comptroller of the Currency</source>
-</item>
-   <item>
-		<title>OCC Raises Concerns with California&apos;s Climate Disclosure Laws</title>
-		<description>The Office of the Comptroller of the Currency (OCC) today submitted a letter to the California Air Resource Board (CARB) addressing the serious legal and policy concerns raised by two California climate disclosure laws.</description>
-			<pubDate>29 Oct 2026 16:00:00 -0400</pubDate>
-		<link>https://www.occ.gov/news-issuances/news-releases/2026/nr-occ-2026-95.html</link>
-		<author>Office of the Comptroller of the Currency</author>			
-		<category>		    		
-									
-			
-																				Laws &amp; Regulations, OCC Regulations
 		
 </category>
 		<source url="https://www.occ.gov">Office of the Comptroller of the Currency</source>

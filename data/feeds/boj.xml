@@ -6,6 +6,41 @@
 <atom:link href="http://www.boj.or.jp/rss/whatsnew.xml?id=1001" rel="self" type="application/rss+xml" />
 <description></description>
 <item>
+<title>日本銀行が保有する国債の銘柄別残高</title>
+<description></description>
+<pubDate>Wed, 25 Nov 2026 17:00:00 +0900</pubDate>
+<link>http://www.boj.or.jp/statistics/boj/other/mei/release/2026/mei261120.xlsx</link>
+<guid>http://www.boj.or.jp/statistics/boj/other/mei/release/2026/mei261120.xlsx</guid>
+</item>
+<item>
+<title>消費者物価のコア指標</title>
+<description></description>
+<pubDate>Wed, 25 Nov 2026 14:00:00 +0900</pubDate>
+<link>http://www.boj.or.jp/research/research_data/cpi/index.htm</link>
+<guid>http://www.boj.or.jp/research/research_data/cpi/index.htm</guid>
+</item>
+<item>
+<title>営業毎旬報告（11月20日現在）</title>
+<description></description>
+<pubDate>Wed, 25 Nov 2026 10:00:00 +0900</pubDate>
+<link>http://www.boj.or.jp/statistics/boj/other/acmai/release/2026/ac261120.htm</link>
+<guid>http://www.boj.or.jp/statistics/boj/other/acmai/release/2026/ac261120.htm</guid>
+</item>
+<item>
+<title>貸出約定平均金利（9月）</title>
+<description></description>
+<pubDate>Wed, 25 Nov 2026 08:50:00 +0900</pubDate>
+<link>http://www.boj.or.jp/statistics/dl/loan/yaku/yaku2609.pdf</link>
+<guid>http://www.boj.or.jp/statistics/dl/loan/yaku/yaku2609.pdf</guid>
+</item>
+<item>
+<title>企業向けサービス価格指数（10月）</title>
+<description></description>
+<pubDate>Wed, 25 Nov 2026 08:50:00 +0900</pubDate>
+<link>http://www.boj.or.jp/statistics/pi/cspi_release/sppi2610.pdf</link>
+<guid>http://www.boj.or.jp/statistics/pi/cspi_release/sppi2610.pdf</guid>
+</item>
+<item>
 <title>バーゼル銀行監督委員会による議事要旨の公表について</title>
 <description></description>
 <pubDate>Tue, 24 Nov 2026 17:00:00 +0900</pubDate>
@@ -438,13 +473,6 @@
 <pubDate>Wed, 28 Oct 2026 11:00:00 +0900</pubDate>
 <link>http://www.boj.or.jp/finsys/intlact_fs/risk/ris261028a.htm</link>
 <guid>http://www.boj.or.jp/finsys/intlact_fs/risk/ris261028a.htm</guid>
-</item>
-<item>
-<title>消費者物価のコア指標</title>
-<description></description>
-<pubDate>Tue, 27 Oct 2026 14:00:00 +0900</pubDate>
-<link>http://www.boj.or.jp/research/research_data/cpi/index.htm</link>
-<guid>http://www.boj.or.jp/research/research_data/cpi/index.htm</guid>
 </item>
 <item>
 <title>情報セキュリティ・セミナー「AIエージェント時代に求められるセキュリティ戦略と課題」開催のお知らせ</title>
