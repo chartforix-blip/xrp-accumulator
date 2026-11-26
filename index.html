@@ -419,7 +419,7 @@ const THEMES=[
  {k:'ai',n:'AI エージェント',l:.3,re:/(^|-)ai(-|$)|agent|artificial|machine-learning/i,soc:'AI が人の代わりに支払いや運用をする時の、通貨とネットワークに使われます。',xr:'今は実績がとても小さいです（2026-11 に調べた時点）。AI による運用の代行は、まだ構想の段階です。'}];
 async function pressList(){
  const label='リップル社の公式発表の一覧';let c=get('press',null);
- if(!c||c.day!==today()){
+ if(!c||c.day!==today()||Date.now()-(+c.at||0)>36e5){   /* 1時間たったら取り直す（取り込みは3時間ごと） */
   try{const r=await fetch(PRESS_URL,{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);const t=await r.text();
    const u=[...t.matchAll(/<url>([\s\S]*?)<\/url>/g)].map(m=>({loc:(m[1].match(/<loc>([^<]+)/)||[])[1]||'',mod:(m[1].match(/<lastmod>([^<]+)/)||[])[1]||''})).filter(x=>/ripple-press\/[^/]+\/?$/.test(x.loc));
    if(u.length<20)throw new Error('中身が足りません');u.sort((a,b)=>b.mod<a.mod?-1:b.mod>a.mod?1:0);
@@ -832,10 +832,10 @@ function newsCard(n){
  const led=state.biz&&state.biz.led?state.biz.led.find(t=>t.k===n.th):null,up=led&&n.st>led.s;
  const ja=n.ja||JA[n.s]||'',en=esc(n.s.replace(/-/g,' ').replace(/^./,c=>c.toUpperCase()));
  const title=ja?esc(ja):`【${TN[n.th]||'その他'}】${R_HEAD[n.st||0]}<br><span class="sub" style="font-weight:400">日本語の題名はまだありません。原題：${en}</span>`;
- return `<div class="nc"><div class="chips"><span class="sub">${esc(n.d||'日付なし')}</span>${n.ai?`<span class="chip okc">${TN[n.th]||'その他'}</span>${n.st?`<span class="chip ${n.st>=4?'go':n.st===3?'okc':'no'}">段階${n.st}：${STN[n.st]}</span>`:''}<span class="chip ${(XS[n.xs]||XS.i)[1]}">XRP への効き：${(XS[n.xs]||XS.i)[0]}</span>${up?'<span class="chip go">段階が進んだ可能性</span>':''}`:'<span class="chip no">解説はまだ</span>'}</div>
+ return `<div class="nc"><div class="chips"><span class="sub">${esc(n.d||'日付なし')}</span><span class="chip ${n.ext?'okc':'go'}">${n.ext?esc(n.src):'リップル社の発表'}</span>${n.ai?`<span class="chip okc">${TN[n.th]||'その他'}</span>${n.st?`<span class="chip ${n.st>=4?'go':n.st===3?'okc':'no'}">段階${n.st}：${STN[n.st]}</span>`:''}<span class="chip ${(XS[n.xs]||XS.i)[1]}">XRP への効き：${(XS[n.xs]||XS.i)[0]}</span>${up?'<span class="chip go">段階が進んだ可能性</span>':''}`:'<span class="chip no">解説はまだ</span>'}</div>
  <h4>${title}</h4>
- ${n.ai?`<dl><dt>何が起きた</dt><dd>${esc(n.what)}</dd><dt>今後の影響</dt><dd>${esc(n.impact)}</dd><dt>XRP への効き方</dt><dd>${esc(n.xrp)}</dd>${n.watch?`<dt>次に見る所</dt><dd>${esc(n.watch)}</dd>`:''}</dl>${n.deep?'':'<div class="sub" style="margin-top:6px">この発表は、本文を読んだ解説がまだありません。テーマごとの決まった文を出しています。</div>'}`:''}
- <div class="sub" style="margin-top:8px"><a href="https://ripple.com/ripple-press/${esc(n.s)}/" target="_blank" rel="noopener">公式の原文を読む</a></div></div>`}
+ ${n.ai?`<dl><dt>何が起きた</dt><dd>${esc(n.what)}</dd><dt>今後の影響</dt><dd>${esc(n.impact)}</dd><dt>XRP への効き方</dt><dd>${esc(n.xrp)}</dd>${n.watch?`<dt>次に見る所</dt><dd>${esc(n.watch)}</dd>`:''}</dl>${n.deep?(n.ext&&!n.body?'<div class="sub" style="margin-top:6px">題名と要約から書いた解説です。細かい所は、元の記事で確かめてください。</div>':''):'<div class="sub" style="margin-top:6px">この発表は、本文を読んだ解説がまだありません。テーマごとの決まった文を出しています。</div>'}`:''}
+ <div class="sub" style="margin-top:8px"><a href="${n.ext?esc(n.url):'https://ripple.com/ripple-press/'+esc(n.s)+'/'}" target="_blank" rel="noopener">${n.ext?'元の記事を読む':'公式の原文を読む'}</a></div></div>`}
 /* 発表の題名の日本語（2026-11-22 に訳して入れた分。新しい発表は、下の決まった見出しが付く） */
 const JA={
 'ripple-and-waterorg-deepen-partnership-to-drive-global-access-to-safe-water':'リップルと Water.org、安全な水を世界に届ける提携を深める',
@@ -976,12 +976,17 @@ function renderNews(){
   const r=ruleNews(x.s,x.d||(a&&a.d)||''),D=DEEP[x.s];
   if(D&&typeof D==='object'){   // 本文を読んで書いた解説がある発表は、それを使う
    if(D.what)r.what=cl(D.what,400);if(D.impact)r.impact=cl(D.impact,700);if(D.xrp)r.xrp=cl(D.xrp,600);if(D.watch)r.watch=cl(D.watch,200);
-   if(XS[D.xs])r.xs=D.xs;if(TN[D.th])r.th=D.th;if(isFinite(D.st))r.st=Math.max(0,Math.min(5,Math.round(+D.st)));if(/^\d{4}-\d\d-\d\d$/.test(D.d||''))r.d=r.d||D.d;r.deep=D.src!=='未読'}
+   if(D.t&&!JA[x.s])r.ja=cl(D.t,60);if(XS[D.xs])r.xs=D.xs;if(TN[D.th])r.th=D.th;if(isFinite(D.st))r.st=Math.max(0,Math.min(5,Math.round(+D.st)));if(/^\d{4}-\d\d-\d\d$/.test(D.d||''))r.d=r.d||D.d;r.deep=D.src!=='未読'}
   return r});
+ /* リップル社の公式ブログと、外の信頼できる情報源（公的機関・大手の報道）の解説を、日付の順に差し込む */
+ const EX=(Array.isArray(window.EXTRA)?window.EXTRA:[]).filter(e=>e&&typeof e==='object'&&/^\d{4}-\d\d-\d\d$/.test(e.d||'')&&/^https:\/\//.test(e.url||'')&&e.what).slice(0,60)
+  .map(e=>({s:'x-'+cl(e.id,70),d:e.d,ai:true,deep:true,ext:true,body:!!e.body,src:cl(e.src,40),url:cl(e.url,500),ja:cl(e.t,60)||'（題名なし）',th:TN[e.th]?e.th:'other',st:isFinite(e.st)?Math.max(0,Math.min(5,Math.round(+e.st))):0,xs:XS[e.xs]?e.xs:'i',what:cl(e.what,400),impact:cl(e.impact,700),xrp:cl(e.xrp,600),watch:cl(e.watch,200)}))
+  .sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:0);
+ for(const e of EX){let i=N.findIndex(n=>n.d&&n.d<e.d);if(i<0)i=N.length;N.splice(i,0,e)}
  state.newsAll=N;
- const note='<p class="sub">リップル社の公式の発表を、新しい順に並べています。題名は日本語に訳したものです（新しく出た発表は、訳が入るまで、テーマと段階の見出しになります）。「XRP への効き方」は、XRPL の仕組み（手数料の焼却・準備金・交換の橋・流動性の池・担保）から考えた経路と、効くための条件です。題名に XRP が出ていなくても、間接の経路があれば書いています。量の数字が公表されていないものは、経路として書いています。</p>';
+ const note='<p class="sub">リップル社の公式の発表・公式ブログと、公的機関・大手の報道（CoinDesk・ロイター・ブルームバーグなど）から、XRP に関わる事実を新しい順に並べています。値段の予想だけの記事は入れていません。報道の分は、題名と要約から書いた解説です。題名は日本語に訳したものです（新しく出た発表は、訳が入るまで、テーマと段階の見出しになります）。「XRP への効き方」は、XRPL の仕組み（手数料の焼却・準備金・交換の橋・流動性の池・担保）から考えた経路と、効くための条件です。題名に XRP が出ていなくても、間接の経路があれば書いています。量の数字が公表されていないものは、経路として書いています。</p>';
  if($('nhome'))$('nhome').innerHTML=`<h2>最新の動向</h2>${N.length?N.filter(n=>n.th!=='other').slice(0,3).map(newsCard).join('')+'<div class="row"><button class="main" data-go="news">動向をもっと見る</button></div>':'<p class="sub">動向のデータがまだありません。</p>'}`;
- if($('news'))$('news').innerHTML=`<h2>リップル社と XRP の最新の動向</h2>${note}<div class="sub">解説の自動更新：${window.AUTO&&window.AUTO.at?esc(String(window.AUTO.at))+'（'+esc(String(window.AUTO.status||''))+'・自動で書いた解説 '+num(+window.AUTO.n||0,0)+'本）':'まだ動いていません'}</div>${N.length?N.slice(0,40).map(newsCard).join(''):'<p class="sub">動向のデータがまだありません。毎朝、新しい発表を取り込みます。</p>'}`;
+ if($('news'))$('news').innerHTML=`<h2>リップル社と XRP の最新の動向</h2>${note}<div class="sub">解説の自動更新：${window.AUTO&&window.AUTO.at?esc(String(window.AUTO.at))+'（'+esc(String(window.AUTO.status||''))+'・自動で書いた解説 '+num(+window.AUTO.n||0,0)+'本）':'まだ動いていません'}</div>${N.length?N.slice(0,60).map(newsCard).join(''):'<p class="sub">動向のデータがまだありません。毎朝、新しい発表を取り込みます。</p>'}`;
 }
 /* 行の長さをそろえる機能がないブラウザ（古い iPhone など）用：幅をせばめて、行の長さをそろえる */
 function balanceFallback(force){
