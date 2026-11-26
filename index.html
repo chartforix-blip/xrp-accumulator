@@ -89,6 +89,9 @@ a{color:#6cc8ff}
 .steps strong{display:block;font-size:16px}
 /* 文を減らして、図で見せる */
 body:not(.notes) main .note{display:none}
+.guidebox{display:none;margin:10px 0 0;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-size:13px;line-height:1.7}
+body.notes .guidebox{display:block}
+.guidebox b{color:var(--acc,var(--ok))}.guidebox ul{margin:6px 0 0;padding-left:18px}.guidebox li{margin:3px 0}
 body main details[open] .note{display:block}
 section>h2{cursor:pointer;margin:0}
 section:not(.closed)>h2{margin-bottom:12px}
@@ -184,6 +187,7 @@ details p{margin:4px 0 2px}
 </div>
 <p class="note">指標の状態を見せる道具です。利益を約束するものではありません。</p>
 <div class="row"><span id="status" class="sub">データを読み込んでいます…</span><button id="noteBtn" type="button">説明を表示</button></div>
+<div id="guide" class="guidebox"></div>
 </header>
 <main>
 <section id="sig" data-tab="home"></section>
@@ -210,7 +214,7 @@ details p{margin:4px 0 2px}
 </nav>
 <footer>XRP のシンボルは、コミュニティが作った XRP の印を使っています。この道具はリップル社や XRP の公式のものではありません。注文や送金の機能はありません。API の鍵や個人情報は使いません。記録はこの端末のブラウザの中だけに保存します。</footer>
 <script src="analysis.js"></script>
-<script src="analysis-auto.js"></script>
+<script>/* 自動の解説は3時間ごとに変わるので、10分ごとに新しい写しを読む */document.write('<script src="analysis-auto.js?t='+Math.floor(Date.now()/6e5)+'"><\/script>')</script>
 <script>
 'use strict';
 /* ---------- 保存 ---------- */
@@ -996,7 +1000,14 @@ function balanceFallback(force){
   if(h<lh*1.6||w<40)return;let lo=w/2,hi=w;for(let k=0;k<7;k++){const m=(lo+hi)/2;e.style.maxWidth=m+'px';if(e.offsetHeight>h)lo=m;else hi=m}
   e.style.maxWidth=Math.ceil(hi)+'px'})}
 document.addEventListener('toggle',()=>setTimeout(balanceFallback,0),true);
-function go(tab){setTimeout(balanceFallback,60);document.body.dataset.tab=tab;document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.go===tab));set('tab',tab);window.scrollTo(0,0);if(tab==='more')setTimeout(drawChart,50)}
+const GUIDE={
+ home:['ホームの見方',['「買い増しの合図」は、週足 RSI が 40 以下の時に出ます。過去にその日に買った場合、1年後に値段が上だった割合を下に出しています。','「総合点」は、将来性・値段の安さ・大口の動き・相場の過熱を 0〜100点にまとめた数字です。70点以上は多めに、50〜69点は予定額、50点未満は見送りの目安です。','「最新の動向」は、新しい情報の上から3つです。全部は「動向」タブにあります。']],
+ news:['動向の見方',['リップル社の発表・公式ブログと、公的機関・大手の報道から、XRP に関わる事実を新しい順に並べています。3時間ごとに自動で取り込みます。','色の付いた札は、出どころ・テーマ・段階・XRP への効き方（直接・間接・遠い）です。','「XRP への効き方」は、どの仕組みを通ると XRP が使われるかと、その条件です。報道の分は、題名と要約から書いています。']],
+ fore:['予測の見方',['上の輪は「事業の分析の点」です。市場の伸び・許可と契約・XRP の確かさの3つを、重みを付けて合わせています。重みは下のつまみで変えられます。','「考え方の段」は、AI×金融×経済 → ブロックチェーン → XRPL という考え方を段に分けて、今の裏付けを書いたものです。新しい事実が入ると自動で見直します。','「今後の予測」は、あなたの保有数・毎月の買い増し額・利率を入れると、値段の伸びを3つ置いた場合の資産額と利息を計算します。値段の伸びは自分で置く前提で、当たるとは限りません。']],
+ asset:['資産の見方',['保有数・平均の買値・貸し出しの利率を入れると、今の資産額と利息を出します。','買い増しの記録を足すと、平均の買値と保有数に入ります。数字はこの端末の中だけに保存されます。']],
+ more:['その他の見方',['点数のもとになる指標の表、過去の検証、設定、記録の書き出し・読み込み、データの出どころがあります。','各欄の細かい説明も、「説明を表示」を押している間は出ます。']]};
+function guide(tab){const g=GUIDE[tab]||GUIDE.home,el=$('guide');if(el)el.innerHTML='<b>'+g[0]+'</b><ul>'+g[1].map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><div class="sub" style="margin-top:6px">もう一度押すと隠れます。</div>'}
+function go(tab){guide(tab);setTimeout(balanceFallback,60);document.body.dataset.tab=tab;document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.go===tab));set('tab',tab);window.scrollTo(0,0);if(tab==='more')setTimeout(drawChart,50)}
 function renderFm(){
  const old=fm.at?Math.floor((Date.now()-new Date(fm.at).getTime())/864e5):null;
  $('fm').innerHTML=`<h2>材料を自分で点にする</h2>
