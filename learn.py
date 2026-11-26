@@ -5,7 +5,7 @@
 import json, os, re, sys, html, time, glob, hashlib, datetime, email.utils, urllib.request, urllib.error
 
 KEY = os.environ.get("GEMINI_API_KEY", "").strip()
-MODELS = ["gemini-4-hydrogen", "gemini-3.8-flash", "gemini-3.6-flash"]   # 無料枠のあるモデル（2026-11-23 公式の料金ページで確認）
+MODELS = ["gemini-4-hydrogen", "gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-2.5-flash"]   # 無料枠のあるモデル（2026-11-23 公式の料金ページで確認）
 API = "https://generativelanguage.googleapis.com/v1beta/interactions"
 MAX_CALLS = 9          # 1回の実行で呼ぶ上限（やり直しを含む）
 MAX_NEW = 3            # 1回の実行で読む発表の上限
@@ -15,6 +15,8 @@ OUT = "analysis-auto.js"
 TH = ["bank", "pay", "multi", "inst", "rwa", "rlusd", "ai", "xrp", "other"]
 TODAY = (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=9)).strftime("%Y-%m-%d")   # 日本時間
 calls = 0
+tries = 0
+MAX_TRIES = 40       # 失敗を含めた試行の上限
 stopped = ""
 
 RULES = """書き方の決まり：
@@ -31,45 +33,55 @@ def clean(v, n):
     return v[:n]
 
 def ask(prompt, schema):
-    """Gemini を1回呼び、JSON を返す。使えない時は None。"""
-    global calls, stopped
+    """Gemini を呼び、JSON を返す。使えない時は None。
+    混雑（5xx）の時は、ほかのモデルを順に試し、全部だめなら待ってもう一巡する（最大3巡）。"""
+    global calls, tries, stopped
     if stopped or calls >= MAX_CALLS:
         return None
-    for model in MODELS:
-        if calls >= MAX_CALLS:
-            return None
-        calls += 1
-        body = json.dumps({"model": model, "input": prompt,
-                           "response_format": {"type": "text", "mime_type": "application/json", "schema": schema}}).encode("utf-8")
-        req = urllib.request.Request(API, data=body, method="POST", headers={
-            "Content-Type": "application/json", "x-goog-api-key": KEY})
-        try:
-            with urllib.request.urlopen(req, timeout=120) as r:
-                data = json.loads(r.read().decode("utf-8", "replace"))
-        except urllib.error.HTTPError as e:
-            log("AI の返事：HTTP", e.code, model)
-            if e.code == 429:
-                stopped = "上限（429）"
+    for rnd in range(3):
+        if rnd:
+            time.sleep(40 * rnd)
+        for model in MODELS:
+            if tries >= MAX_TRIES:
+                stopped = "Gemini が混雑。次の回にやり直します"
                 return None
-            if e.code in (401, 403):
-                stopped = "鍵が使えない（%d）" % e.code
-                return None
-            if e.code >= 500:             # 混雑など：少し待って、次のモデルを試す
-                time.sleep(15)
-                last5 = e.code
+            tries += 1
+            body = json.dumps({"model": model, "input": prompt,
+                               "response_format": {"type": "text", "mime_type": "application/json", "schema": schema}}).encode("utf-8")
+            req = urllib.request.Request(API, data=body, method="POST", headers={
+                "Content-Type": "application/json", "x-goog-api-key": KEY})
+            try:
+                with urllib.request.urlopen(req, timeout=150) as r:
+                    data = json.loads(r.read().decode("utf-8", "replace"))
+            except urllib.error.HTTPError as e:
+                try:
+                    msg = re.sub(r"\s+", " ", e.read().decode("utf-8", "replace"))[:300]
+                except Exception:
+                    msg = ""
+                log("AI の返事：HTTP", e.code, model, msg)
+                if e.code == 429:
+                    if "day" in msg.lower() or "daily" in msg.lower():
+                        stopped = "無料枠の1日の上限（429）。明日やり直します"
+                        return None
+                    time.sleep(20)            # 1分あたりの上限：少し待って次のモデルへ
+                    continue
+                if e.code in (401, 403):
+                    stopped = "鍵が使えない（%d）" % e.code
+                    return None
+                time.sleep(5)                 # 混雑（5xx）・モデルが無い（404）など：次のモデルを試す
                 continue
-            continue                      # 404 など：次のモデルを試す
-        except Exception as e:
-            log("AI を呼べませんでした：", type(e).__name__)
-            stopped = "通信の失敗"
+            except Exception as e:
+                log("AI を呼べませんでした：", type(e).__name__, model)
+                time.sleep(5)
+                continue
+            calls += 1
+            for t in texts(data):
+                j = parse(t)
+                if isinstance(j, dict):
+                    return j
+            log("AI の返事を読めませんでした", model)
             return None
-        for t in texts(data):
-            j = parse(t)
-            if isinstance(j, dict):
-                return j
-        log("AI の返事を読めませんでした", model)
-        return None
-    stopped = "Gemini が混雑（3つのモデルとも失敗）。次の回にやり直します"
+    stopped = "Gemini が混雑（全部のモデルで3巡とも失敗）。次の回にやり直します"
     return None
 
 def texts(o):
