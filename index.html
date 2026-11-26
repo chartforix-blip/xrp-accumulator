@@ -138,9 +138,13 @@ body:not([data-tab=more]) footer{display:none}
 .nc{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:10px 0;background:rgba(255,255,255,.035)}
 .nc h4{margin:6px 0 8px;font-size:16px;line-height:1.5}
 .nc .chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.nc dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 10px;font-size:14px}
-.nc dt{color:var(--acc);font-size:12px;white-space:nowrap;padding-top:2px}
+.nc dl{margin:4px 0 0;display:block;font-size:15px;line-height:1.75}
+.nc dt{display:flex;align-items:center;gap:6px;margin:12px 0 4px;color:var(--acc);font-size:12.5px;font-weight:700;letter-spacing:.04em}
+.nc dt::before{content:"";width:3px;height:13px;border-radius:2px;background:var(--acc)}
 .nc dd{margin:0}
+.nc dd p{margin:0 0 6px}.nc dd p:last-child{margin-bottom:0}
+.nc dd.watch{padding:8px 10px;border-radius:10px;background:rgba(53,224,255,.07);border:1px solid rgba(53,224,255,.18)}
+@media (max-width:600px){header,main{padding:0 8px}section{padding:12px 11px}.nc{padding:11px 11px;margin:8px 0}.nc h4{font-size:16px}}
 .bd{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
 .bd span{padding:6px 12px;border-radius:999px;border:1px solid var(--line);color:var(--sub);font-size:13px}
 .bd span.got{color:#04121a;background:linear-gradient(90deg,var(--acc),var(--go));border:0;font-weight:700;box-shadow:0 0 14px rgba(39,217,163,.4)}
@@ -832,13 +836,15 @@ function renderBiz(){
 }
 /* ---------- 最新の動向（リップル社の公式発表）と解説 ---------- */
 const TN={bank:'銀行免許・許可',pay:'決済・送金',multi:'マルチチェーン',inst:'機関投資家・担保',rwa:'トークン化',rlusd:'RLUSD',ai:'AI エージェント',xrp:'XRP・XRPL',other:'その他'};
+/* 長い文は、2文ずつの段落に分けて読みやすくする */
+function paras(t){const S=String(t||'').split(/(?<=。)/).map(x=>x.trim()).filter(Boolean),P=[];for(let i=0;i<S.length;i+=2)P.push(S.slice(i,i+2).join(''));return P.map(p=>'<p>'+esc(p)+'</p>').join('')}
 function newsCard(n){
  const led=state.biz&&state.biz.led?state.biz.led.find(t=>t.k===n.th):null,up=led&&n.st>led.s;
  const ja=n.ja||JA[n.s]||'',en=esc(n.s.replace(/-/g,' ').replace(/^./,c=>c.toUpperCase()));
  const title=ja?esc(ja):`【${TN[n.th]||'その他'}】${R_HEAD[n.st||0]}<br><span class="sub" style="font-weight:400">日本語の題名はまだありません。原題：${en}</span>`;
  return `<div class="nc"><div class="chips"><span class="sub">${esc(n.d||'日付なし')}</span><span class="chip ${n.ext?'okc':'go'}">${n.ext?esc(n.src):'リップル社の発表'}</span>${n.ai?`<span class="chip okc">${TN[n.th]||'その他'}</span>${n.st?`<span class="chip ${n.st>=4?'go':n.st===3?'okc':'no'}">段階${n.st}：${STN[n.st]}</span>`:''}<span class="chip ${(XS[n.xs]||XS.i)[1]}">XRP への効き：${(XS[n.xs]||XS.i)[0]}</span>${up?'<span class="chip go">段階が進んだ可能性</span>':''}`:'<span class="chip no">解説はまだ</span>'}</div>
  <h4>${title}</h4>
- ${n.ai?`<dl><dt>何が起きた</dt><dd>${esc(n.what)}</dd><dt>今後の影響</dt><dd>${esc(n.impact)}</dd><dt>XRP への効き方</dt><dd>${esc(n.xrp)}</dd>${n.watch?`<dt>次に見る所</dt><dd>${esc(n.watch)}</dd>`:''}</dl>${n.deep?(n.ext&&!n.body?'<div class="sub" style="margin-top:6px">題名と要約から書いた解説です。細かい所は、元の記事で確かめてください。</div>':''):'<div class="sub" style="margin-top:6px">この発表は、本文を読んだ解説がまだありません。テーマごとの決まった文を出しています。</div>'}`:''}
+ ${n.ai?`<dl><dt>何が起きた</dt><dd>${paras(n.what)}</dd><dt>XRP への効き方</dt><dd>${paras(n.xrp)}</dd><dt>今後の影響</dt><dd>${paras(n.impact)}</dd>${n.watch?`<dt>次に見る所</dt><dd class="watch">${esc(n.watch)}</dd>`:''}</dl>${n.deep?(n.ext&&!n.body?'<div class="sub" style="margin-top:6px">題名と要約から書いた解説です。細かい所は、元の記事で確かめてください。</div>':''):'<div class="sub" style="margin-top:6px">この発表は、本文を読んだ解説がまだありません。テーマごとの決まった文を出しています。</div>'}`:''}
  <div class="sub" style="margin-top:8px"><a href="${n.ext?esc(n.url):'https://ripple.com/ripple-press/'+esc(n.s)+'/'}" target="_blank" rel="noopener">${n.ext?'元の記事を読む':'公式の原文を読む'}</a></div></div>`}
 /* 発表の題名の日本語（2026-11-22 に訳して入れた分。新しい発表は、下の決まった見出しが付く） */
 const JA={
