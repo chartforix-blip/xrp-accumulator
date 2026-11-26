@@ -1,9 +1,9 @@
-# 新しい発表を読んで、解説と「考え方の段」を自動で書き直す（1日1回）。
-# AI は Google Gemini の無料枠だけを使う。鍵は Secrets の GEMINI_API_KEY。鍵が無い日は何もしない。
+# Reads new releases, blog posts and trusted news, then rewrites the commentary, the thesis steps and the numbers. Every 3 hours.
+# AI: Google Gemini free tier only. Key: Secrets GEMINI_API_KEY. Does nothing without the key.
 name: auto-learn
 on:
   schedule:
-    - cron: "55 21 * * *"
+    - cron: "40 */3 * * *"
   workflow_dispatch:
 permissions:
   contents: write
